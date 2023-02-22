@@ -24,10 +24,10 @@ class CpfCnpj implements ValidationRule
         $this->validator->setValor($value);
         $attribute = strtolower($attribute);
 
-        $valid_cpf = $attribute === 'cpf' && !$this->validator->verifica_sequencia(11);
-        $valid_cnpj = $attribute === 'cnpj' && !$this->validator->verifica_sequencia(14);
+        $valid_cpf = $attribute === 'cpf' && $this->validator->verifica_sequencia(11);
+        $valid_cnpj = $attribute === 'cnpj' && $this->validator->verifica_sequencia(14);
 
-        if (!$valid_cpf || !$valid_cnpj || !$this->validator->valida($value)) {
+        if ((!$valid_cpf || !$valid_cnpj) && !$this->validator->valida($value)) {
             $fail('The :attribute is invalid.');
         }
     }
