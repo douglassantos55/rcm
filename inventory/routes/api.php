@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SupplierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,5 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::apiResources([
+    '/equipment' => EquipmentController::class,
     '/suppliers' => SupplierController::class,
 ]);
