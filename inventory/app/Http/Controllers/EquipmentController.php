@@ -8,6 +8,11 @@ use Illuminate\Validation\Rule;
 
 class EquipmentController extends Controller
 {
+    public function show(Equipment $equipment)
+    {
+        return $equipment;
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

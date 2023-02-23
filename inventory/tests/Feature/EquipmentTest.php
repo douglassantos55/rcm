@@ -60,4 +60,37 @@ class EquipmentTest extends TestCase
         $response->assertStatus(201);
         $this->assertModelExists(Equipment::where('description', 'Tool')->first());
     }
+
+    public function test_show()
+    {
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+
+        $response = $this->get(route('equipment.show', $equipment->id), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertExactJson($equipment->refresh()->toArray());
+    }
+
+    public function test_show_not_found()
+    {
+        $uuid = '1b443f68-4fad-4d01-aacf-6c455ba2bbf4';
+        $response = $this->get(route('equipment.show', $uuid));
+
+        $response->assertNotFound();
+    }
+
+    public function test_show_soft_deleted()
+    {
+        $equipment = Equipment::factory()->create([
+            'description' => 'Test',
+            'deleted_at' => now(),
+        ]);
+
+        $response = $this->get(route('equipment.show', $equipment->id), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertNotFound();
+    }
 }
