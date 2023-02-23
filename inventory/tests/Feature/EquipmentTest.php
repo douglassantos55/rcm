@@ -144,4 +144,31 @@ class EquipmentTest extends TestCase
             'replace_value' => 'The replace value field must be a number.',
         ]);
     }
+
+    public function test_soft_delete()
+    {
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+        $response = $this->delete(route('equipment.destroy', $equipment->id));
+
+        $response->assertStatus(204);
+        $this->assertSoftDeleted($equipment);
+    }
+
+    public function test_delete_not_found()
+    {
+        $uuid = '0ddb504a-b2b8-4047-86de-0d8862007ccd';
+        $response = $this->delete(route('equipment.destroy', $uuid));
+        $response->assertNotFound();
+    }
+
+    public function test_delete_soft_deleted()
+    {
+        $equipment = Equipment::factory()->create([
+            'description' => 'Test',
+            'deleted_at' => now(),
+        ]);
+
+        $response = $this->delete(route('equipment.destroy', $equipment->id));
+        $response->assertNotFound();
+    }
 }

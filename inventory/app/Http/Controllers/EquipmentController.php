@@ -22,4 +22,10 @@ class EquipmentController extends Controller
         $equipment->update($request->validated());
         return $equipment;
     }
+
+    public function destroy(Equipment $equipment)
+    {
+        $equipment->delete();
+        return response()->noContent();
+    }
 }
