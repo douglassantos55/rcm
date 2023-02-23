@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class EquipmentController extends Controller
 {
@@ -13,22 +12,14 @@ class EquipmentController extends Controller
         return $equipment;
     }
 
-    public function store(Request $request)
+    public function store(EquipmentRequest $request)
     {
-        $validated = $request->validate([
-            'description' => ['required'],
-            'unit' => ['required', Rule::in(Equipment::UNITS)],
-            'supplier_id' => ['nullable', 'exists:App\Models\Supplier,id'],
-            'profit_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'weight' => ['nullable', 'numeric'],
-            'in_stock' => ['required', 'integer'],
-            'effective_qty' => ['required', 'integer'],
-            'min_qty' => ['nullable', 'integer'],
-            'purchase_value' => ['required', 'numeric'],
-            'unit_value' => ['required', 'numeric'],
-            'replace_value' => ['required', 'numeric'],
-        ]);
+        return Equipment::create($request->validated());
+    }
 
-        return Equipment::create($validated);
+    public function update(EquipmentRequest $request, Equipment $equipment)
+    {
+        $equipment->update($request->validated());
+        return $equipment;
     }
 }
