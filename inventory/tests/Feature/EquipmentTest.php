@@ -12,7 +12,7 @@ class EquipmentTest extends TestCase
 
     public function test_validation()
     {
-        $response = $this->post(route('equipment.store'), [
+        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
             'description' => '  ',
             'unit' => 'kg',
             'supplier_id' => 'b396a772-242c-4974-9493-6418fa843fd1',
@@ -43,7 +43,7 @@ class EquipmentTest extends TestCase
 
     public function test_create()
     {
-        $response = $this->post(route('equipment.store'), [
+        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
             'description' => 'Tool',
             'unit' => 'mt',
             'supplier_id' => null,
@@ -65,7 +65,7 @@ class EquipmentTest extends TestCase
     {
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->get(route('equipment.show', $equipment->id), [
+        $response = $this->withToken($this->validToken)->get(route('equipment.show', $equipment->id), [
             'accept' => 'application/json'
         ]);
 
@@ -75,7 +75,7 @@ class EquipmentTest extends TestCase
     public function test_show_not_found()
     {
         $uuid = '1b443f68-4fad-4d01-aacf-6c455ba2bbf4';
-        $response = $this->get(route('equipment.show', $uuid));
+        $response = $this->withToken($this->validToken)->get(route('equipment.show', $uuid));
 
         $response->assertNotFound();
     }
@@ -87,7 +87,7 @@ class EquipmentTest extends TestCase
             'deleted_at' => now(),
         ]);
 
-        $response = $this->get(route('equipment.show', $equipment->id), [
+        $response = $this->withToken($this->validToken)->get(route('equipment.show', $equipment->id), [
             'accept' => 'application/json'
         ]);
 
@@ -98,7 +98,7 @@ class EquipmentTest extends TestCase
     {
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->put(route('equipment.update', $equipment->id), [
+        $response = $this->withToken($this->validToken)->put(route('equipment.update', $equipment->id), [
             'description' => 'Updated',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -116,7 +116,7 @@ class EquipmentTest extends TestCase
     {
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->put(route('equipment.update', $equipment->id), [
+        $response = $this->withToken($this->validToken)->put(route('equipment.update', $equipment->id), [
             'description' => '  ',
             'unit' => 'kg',
             'supplier_id' => 'b396a772-242c-4974-9493-6418fa843fd1',
@@ -148,7 +148,7 @@ class EquipmentTest extends TestCase
     public function test_soft_delete()
     {
         $equipment = Equipment::factory()->create(['description' => 'Test']);
-        $response = $this->delete(route('equipment.destroy', $equipment->id));
+        $response = $this->withToken($this->validToken)->delete(route('equipment.destroy', $equipment->id));
 
         $response->assertStatus(204);
         $this->assertSoftDeleted($equipment);
@@ -157,7 +157,7 @@ class EquipmentTest extends TestCase
     public function test_delete_not_found()
     {
         $uuid = '0ddb504a-b2b8-4047-86de-0d8862007ccd';
-        $response = $this->delete(route('equipment.destroy', $uuid));
+        $response = $this->withToken($this->validToken)->delete(route('equipment.destroy', $uuid));
         $response->assertNotFound();
     }
 
@@ -168,7 +168,76 @@ class EquipmentTest extends TestCase
             'deleted_at' => now(),
         ]);
 
-        $response = $this->delete(route('equipment.destroy', $equipment->id));
+        $response = $this->withToken($this->validToken)->delete(route('equipment.destroy', $equipment->id));
         $response->assertNotFound();
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_create_unauthorized(string $token)
+    {
+        $response = $this->withToken($token)->post(route('equipment.store'), [
+            'description' => 'Tool',
+            'unit' => 'mt',
+            'supplier_id' => null,
+            'profit_percentage' => '30',
+            'weight' => '20.5',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'min_qty' => '351',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_show_unauthorized(string $token)
+    {
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+
+        $response = $this->withToken($token)->get(route('equipment.show', $equipment->id), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_update_unauthorized(string $token)
+    {
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+
+        $response = $this->withToken($token)->put(route('equipment.update', $equipment->id), [
+            'description' => 'Updated',
+            'unit' => 'mt',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_soft_delete_unauthorized(string $token)
+    {
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+
+        $route = route('equipment.destroy', $equipment->id);
+        $response = $this->withToken($token)->delete($route, [], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
     }
 }
