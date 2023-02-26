@@ -172,6 +172,18 @@ class EquipmentTest extends TestCase
         $response->assertNotFound();
     }
 
+    public function test_list()
+    {
+        Equipment::factory()->count(10)->create();
+        Equipment::factory()->count(10)->create(['deleted_at' => now()]);
+
+        $response = $this->withToken($this->validToken)->get(route('equipment.index'), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(10);
+    }
+
     /**
      * @dataProvider invalidTokensProvider
      */
@@ -237,6 +249,18 @@ class EquipmentTest extends TestCase
 
         $route = route('equipment.destroy', $equipment->id);
         $response = $this->withToken($token)->delete($route, [], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_list_unauthorized(string $token)
+    {
+        $response = $this->withToken($token)->get(route('equipment.index'), [
+            'accept' => 'application/json'
+        ]);
 
         $response->assertUnauthorized();
     }

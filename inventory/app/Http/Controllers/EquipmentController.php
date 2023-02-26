@@ -7,6 +7,11 @@ use App\Models\Equipment;
 
 class EquipmentController extends Controller
 {
+    public function index()
+    {
+        return Equipment::all();
+    }
+
     public function show(Equipment $equipment)
     {
         return $equipment;
