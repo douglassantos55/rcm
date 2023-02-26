@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PeriodRequest;
 use App\Models\Period;
-use Illuminate\Http\Request;
 
 class PeriodController extends Controller
 {
@@ -18,14 +18,9 @@ class PeriodController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PeriodRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required'],
-            'qty_days' => ['required', 'integer'],
-        ]);
-
-        return Period::create($validated)->refresh();
+        return Period::create($request->validated())->refresh();
     }
 
     /**
@@ -39,9 +34,10 @@ class PeriodController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(PeriodRequest $request, Period $period)
     {
-        //
+        $period->update($request->validated());
+        return $period;
     }
 
     /**
