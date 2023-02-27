@@ -26,9 +26,9 @@ class PeriodController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Period $period)
     {
-        //
+        return $period;
     }
 
     /**

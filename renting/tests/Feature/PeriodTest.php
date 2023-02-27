@@ -52,6 +52,16 @@ class PeriodTest extends TestCase
         ]);
     }
 
+    public function test_update_empty()
+    {
+        $response = $this->put(route('periods.update', ''), [
+            'name' => 'Weekly',
+            'qty_days' => 7,
+        ], ['accept' => 'application/json']);
+
+        $response->assertStatus(405);
+    }
+
     public function test_update()
     {
         $period = Period::factory()->create(['name' => 'Daily', 'qty_days' => 1]);
@@ -63,6 +73,15 @@ class PeriodTest extends TestCase
 
         $period->refresh();
         $response->assertExactJson($period->toArray());
+    }
+
+    public function test_delete_empty()
+    {
+        $response = $this->delete(route('periods.destroy', ''), [], [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertStatus(405);
     }
 
     public function test_delete_non_existent()
@@ -97,5 +116,38 @@ class PeriodTest extends TestCase
 
         $response->assertNoContent();
         $this->assertSoftDeleted($period);
+    }
+
+    public function test_show_non_existent()
+    {
+        $uuid = '91888150-eeb1-4586-a1f1-dc50fc3d5c97';
+
+        $response = $this->get(route('periods.show', $uuid), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_show_soft_deleted()
+    {
+        $period = Period::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->get(route('periods.show', $period->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_show()
+    {
+        $period = Period::factory()->create();
+
+        $response = $this->get(route('periods.show', $period->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertExactJson($period->refresh()->toArray());
     }
 }
