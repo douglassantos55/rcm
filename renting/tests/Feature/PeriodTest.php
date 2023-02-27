@@ -65,4 +65,37 @@ class PeriodTest extends TestCase
         $response->assertExactJson($period->toArray());
     }
 
+    public function test_delete_non_existent()
+    {
+        $uuid = '91888150-eeb1-4586-a1f1-dc50fc3d5c97';
+
+        $response = $this->delete(route('periods.destroy', $uuid), [], [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_delete_soft_deleted()
+    {
+        $period = Period::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->delete(route('periods.destroy', $period->id), [], [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_delete()
+    {
+        $period = Period::factory()->create();
+
+        $response = $this->delete(route('periods.destroy', $period->id), [], [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNoContent();
+        $this->assertSoftDeleted($period);
+    }
 }
