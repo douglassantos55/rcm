@@ -150,4 +150,16 @@ class PeriodTest extends TestCase
 
         $response->assertExactJson($period->refresh()->toArray());
     }
+
+    public function test_list()
+    {
+        Period::factory()->count(10)->create(['deleted_at' => now()]);
+        Period::factory()->count(10)->create();
+
+        $response = $this->get(route('periods.index'), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(10);
+    }
 }

@@ -12,7 +12,7 @@ class PeriodController extends Controller
      */
     public function index()
     {
-        //
+        return Period::all();
     }
 
     /**
