@@ -107,6 +107,7 @@ class CustomersTest extends TestCase
     public function test_update_non_existent()
     {
         $uuid = '1b443f68-4fad-4d01-aacf-6c455ba2bbf4';
+
         $response = $this->put(route('customers.update', $uuid), ['name' => 'Jane'], [
             'accept' => 'application/json',
         ]);
@@ -260,5 +261,47 @@ class CustomersTest extends TestCase
 
         $response->assertNoContent();
         $this->assertSoftDeleted($customer);
+    }
+
+    public function test_show_non_existent()
+    {
+        $uuid = '1b443f68-4fad-4d01-aacf-6c455ba2bbf4';
+
+        $response = $this->get(route('customers.show', $uuid), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_show_empty()
+    {
+        $response = $this->get(route('customers.show', ' '), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_show_soft_deleted()
+    {
+        $customer = Customer::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->get(route('customers.show', $customer->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_show()
+    {
+        $customer = Customer::factory()->create();
+
+        $response = $this->get(route('customers.show', $customer->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertExactJson($customer->refresh()->toArray());
     }
 }
