@@ -218,4 +218,47 @@ class CustomersTest extends TestCase
         $this->assertEquals('Jon', $customer->name);
         $this->assertEquals('297.164.260-70', $customer->cpf_cnpj);
     }
+
+    public function test_delete_non_existent()
+    {
+        $uuid = '1b443f68-4fad-4d01-aacf-6c455ba2bbf4';
+
+        $response = $this->delete(route('customers.destroy', $uuid), [], [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_delete_empty()
+    {
+        $response = $this->delete(route('customers.destroy', ''), [], [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertStatus(405);
+    }
+
+    public function test_delete_soft_deleted()
+    {
+        $customer = Customer::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->delete(route('customers.destroy', $customer->id), [], [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_delete()
+    {
+        $customer = Customer::factory()->create();
+
+        $response = $this->delete(route('customers.destroy', $customer->id), [], [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNoContent();
+        $this->assertSoftDeleted($customer);
+    }
 }
