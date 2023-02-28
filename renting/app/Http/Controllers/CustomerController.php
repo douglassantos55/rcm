@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
-use App\Rules\CpfCnpj;
-use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -19,17 +18,9 @@ class CustomerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, CpfCnpj $cpfCnpj)
+    public function store(CustomerRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required'],
-            'email' => ['nullable', 'email', 'unique:\App\Models\Customer,email'],
-            'cpf_cnpj' => ['nullable', $cpfCnpj, 'unique:\App\Models\Customer,cpf_cnpj'],
-            'state' => ['nullable', 'size:2'],
-            'postcode' => ['nullable', 'regex:/^\d{5}-\d{3}$/'],
-        ]);
-
-        return Customer::create($validated)->refresh();
+        return Customer::create($request->validated())->refresh();
     }
 
     /**
@@ -43,9 +34,10 @@ class CustomerController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CustomerRequest $request, Customer $customer)
     {
-        //
+        $customer->update($request->validated());
+        return $customer;
     }
 
     /**
