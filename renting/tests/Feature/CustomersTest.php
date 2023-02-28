@@ -304,4 +304,15 @@ class CustomersTest extends TestCase
 
         $response->assertExactJson($customer->refresh()->toArray());
     }
+
+    public function test_list_paginates()
+    {
+        Customer::factory()->count(500)->create();
+
+        $response = $this->get(route('customers.index'), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(50, 'data');
+    }
 }
