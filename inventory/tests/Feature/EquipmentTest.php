@@ -4,6 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class EquipmentTest extends TestCase
@@ -43,6 +46,8 @@ class EquipmentTest extends TestCase
 
     public function test_create()
     {
+        Http::fake();
+
         $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
             'description' => 'Tool',
             'unit' => 'mt',
@@ -182,6 +187,148 @@ class EquipmentTest extends TestCase
         ]);
 
         $response->assertJsonCount(10);
+    }
+
+    public function test_create_renting_values()
+    {
+        Http::fake([
+            'http://localhost:8001/api/renting-values' => Http::response()
+        ]);
+
+        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+            'description' => 'With renting values',
+            'unit' => 'mt',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+            'values' => [
+                [
+                    'value' => 1050,
+                    'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                ],
+                [
+                    'value' => 1150,
+                    'period_id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                ],
+                [
+                    'value' => 1250,
+                    'period_id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
+                ],
+            ],
+        ]);
+
+        $equipment = $response->json();
+
+        Http::assertSent(function (Request $request, Response $response) use ($equipment) {
+            $data = $request->data();
+
+            if (count($data['values']) !== 3) {
+                return false;
+            }
+
+            foreach ($data['values'] as $value) {
+                if (!isset($value['equipment_id']) || $value['equipment_id'] !== $equipment['id']) {
+                    return false;
+                }
+            }
+
+            return $request->url() === 'http://localhost:8001/api/renting-values'
+                && $request->method() === 'POST' && $response->successful();
+        });
+    }
+
+    public function test_server_error_creating_renting_values()
+    {
+        Http::fake([
+            'http://localhost:8001/api/renting-values' => Http::response(null, 500)
+        ]);
+
+        $this->withToken($this->validToken)->post(route('equipment.store'), [
+            'description' => 'Ugabuga',
+            'unit' => 'mt',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+            'values' => [
+                [
+                    'value' => 1050,
+                    'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                ],
+                [
+                    'value' => 1150,
+                    'period_id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                ],
+                [
+                    'value' => 1250,
+                    'period_id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
+                ],
+            ],
+        ]);
+
+        Http::assertSent(function (Request $request, Response $response) {
+            return $request->url() === 'http://localhost:8001/api/renting-values'
+                && $request->method() === 'POST' && $response->serverError();
+        });
+
+        $this->assertNull(Equipment::where('description', 'Ugabuga')->first());
+    }
+
+    public function test_request_error_creating_renting_values()
+    {
+        Http::fake([
+            'http://localhost:8001/api/renting-values' => Http::response([
+                'errors' => [
+                    'values.0.value' => 'The value field must be a number.',
+                    'values.0.period_id' => 'The period id field is invalid.',
+                    'values.1.value' => 'The value field must be a number.',
+                    'values.1.period_id' => 'The period id field is invalid.',
+                    'values.2.period_id' => 'The period id field is invalid.',
+                ],
+            ], 422),
+        ]);
+
+        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+            'description' => 'Ugabuga',
+            'unit' => 'mt',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+            'values' => [
+                [
+                    'value' => '30,00',
+                    'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                ],
+                [
+                    'value' => 'text',
+                    'period_id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                ],
+                [
+                    'value' => 12.50,
+                    'period_id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
+                ],
+            ],
+        ]);
+
+        Http::assertSent(function (Request $request, Response $response) {
+            return $request->url() === 'http://localhost:8001/api/renting-values'
+                && $request->method() === 'POST' && $response->clientError();
+        });
+
+        $this->assertNull(Equipment::where('description', 'Ugabuga')->first());
+
+        $response->assertJsonValidationErrors([
+            'values.0.value' => 'The value field must be a number.',
+            'values.0.period_id' => 'The period id field is invalid.',
+            'values.1.value' => 'The value field must be a number.',
+            'values.1.period_id' => 'The period id field is invalid.',
+            'values.2.period_id' => 'The period id field is invalid.',
+        ]);
     }
 
     /**
