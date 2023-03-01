@@ -12,6 +12,6 @@ class RentingValue extends Model
     protected $fillable = [
         'value',
         'equipment_id',
-        'period_d',
+        'period_id',
     ];
 }
