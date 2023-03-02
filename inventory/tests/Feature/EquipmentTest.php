@@ -191,9 +191,7 @@ class EquipmentTest extends TestCase
 
     public function test_create_renting_values()
     {
-        Http::fake([
-            'http://localhost:8001/api/renting-values' => Http::response()
-        ]);
+        Http::fake(['renting/api/renting-values' => Http::response()]);
 
         $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
             'description' => 'With renting values',
@@ -234,16 +232,14 @@ class EquipmentTest extends TestCase
                 }
             }
 
-            return $request->url() === 'http://localhost:8001/api/renting-values'
+            return $request->url() === 'renting/api/renting-values'
                 && $request->method() === 'POST' && $response->successful();
         });
     }
 
     public function test_server_error_creating_renting_values()
     {
-        Http::fake([
-            'http://localhost:8001/api/renting-values' => Http::response(null, 500)
-        ]);
+        Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
 
         $this->withToken($this->validToken)->post(route('equipment.store'), [
             'description' => 'Ugabuga',
@@ -270,7 +266,7 @@ class EquipmentTest extends TestCase
         ]);
 
         Http::assertSent(function (Request $request, Response $response) {
-            return $request->url() === 'http://localhost:8001/api/renting-values'
+            return $request->url() === 'renting/api/renting-values'
                 && $request->method() === 'POST' && $response->serverError();
         });
 
@@ -280,7 +276,7 @@ class EquipmentTest extends TestCase
     public function test_request_error_creating_renting_values()
     {
         Http::fake([
-            'http://localhost:8001/api/renting-values' => Http::response([
+            'renting/api/renting-values' => Http::response([
                 'errors' => [
                     'values.0.value' => 'The value field must be a number.',
                     'values.0.period_id' => 'The period id field is invalid.',
@@ -316,7 +312,7 @@ class EquipmentTest extends TestCase
         ]);
 
         Http::assertSent(function (Request $request, Response $response) {
-            return $request->url() === 'http://localhost:8001/api/renting-values'
+            return $request->url() === 'renting/api/renting-values'
                 && $request->method() === 'POST' && $response->clientError();
         });
 

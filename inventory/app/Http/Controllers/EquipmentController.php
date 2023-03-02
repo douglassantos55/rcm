@@ -29,7 +29,9 @@ class EquipmentController extends Controller
             return ['equipment_id' => $equipment->id, ...$value];
         }, $request->post('values', []));
 
-        $response = Http::post('http://localhost:8001/api/renting-values', ['values' => $values]);
+        $response = Http::baseUrl(env('RENTING_SERVICE'))
+            ->withHeaders(['accept' => 'application/json'])
+            ->post('/api/renting-values', ['values' => $values]);
 
         if (!$response->successful()) {
             DB::rollBack();

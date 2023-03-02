@@ -21,6 +21,7 @@ class RentingValueController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'values' => ['required'],
             'values.*.value' => ['required', 'numeric'],
             'values.*.period_id' => ['required', 'exists:App\Models\Period,id'],
             'values.*.equipment_id' => ['required'],

@@ -1,6 +1,6 @@
 version: '3'
 services:
-    laravel.test:
+    inventory:
         build:
             context: ./vendor/laravel/sail/runtimes/8.2
             dockerfile: Dockerfile
@@ -20,7 +20,8 @@ services:
         volumes:
             - '.:/var/www/html'
         networks:
-            - sail
+            - inventory
+            - renting_renting
         depends_on:
             - mysql
             - mailpit
@@ -39,7 +40,7 @@ services:
             - 'sail-mysql:/var/lib/mysql'
             - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
         networks:
-            - sail
+            - inventory
         healthcheck:
             test:
                 - CMD
@@ -54,10 +55,12 @@ services:
             - '${FORWARD_MAILPIT_PORT:-1025}:1025'
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
-            - sail
+            - inventory
 networks:
-    sail:
+    inventory:
         driver: bridge
+    renting_renting:
+        external: true
 volumes:
     sail-mysql:
         driver: local
