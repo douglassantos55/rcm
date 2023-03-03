@@ -77,14 +77,54 @@ class RentingValueTest extends TestCase
 
     public function test_list_by_equipment()
     {
-        RentingValue::factory()->count(10)->create(['equipment_id' => 'test']);
-        RentingValue::factory()->count(20)->create(['equipment_id' => 'something']);
+        $periods = Period::factory()->createMany([
+            ['name' => 'daily', 'qty_days' => 1],
+            ['name' => 'weekly', 'qty_days' => 7],
+            ['name' => 'monthly', 'qty_days' => 30],
+        ]);
+
+        $values = RentingValue::factory()->createMany([
+            [
+                'value' => 0.5,
+                'period_id' => $periods[0]->id,
+                'equipment_id' => 'test',
+            ],
+            [
+                'value' => 1.5,
+                'period_id' => $periods[1]->id,
+                'equipment_id' => 'test',
+            ],
+            [
+                'value' => 2.5,
+                'period_id' => $periods[2]->id,
+                'equipment_id' => 'test',
+            ],
+            [
+                'value' => 0.5,
+                'period_id' => $periods[0]->id,
+                'equipment_id' => 'other',
+            ],
+            [
+                'value' => 1.5,
+                'period_id' => $periods[1]->id,
+                'equipment_id' => 'other',
+            ],
+            [
+                'value' => 2.5,
+                'period_id' => $periods[2]->id,
+                'equipment_id' => 'other',
+            ],
+        ]);
 
         $response = $this->get(route('renting-values.index', [
             'equipment_id' => 'test'
         ]), ['accept' => 'application/json']);
 
-        $response->assertJsonCount(10);
+        $response->assertExactJson([
+            $periods[0]->id => $values[0]->toArray(),
+            $periods[1]->id => $values[1]->toArray(),
+            $periods[2]->id => $values[2]->toArray(),
+        ]);
     }
 
     public function test_list_no_equipment()

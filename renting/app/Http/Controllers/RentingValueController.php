@@ -13,10 +13,14 @@ class RentingValueController extends Controller
      */
     public function index(Request $request)
     {
-        if (!$request->query('equipment_id')) {
+        $equipment = $request->query('equipment_id');
+        if (is_null($equipment)) {
             return response('equipment_id required', 400);
         }
-        return RentingValue::where('equipment_id', $request->query('equipment_id'))->get();
+
+        return RentingValue::where('equipment_id', $equipment)
+            ->get()
+            ->keyBy('period_id');
     }
 
     /**
