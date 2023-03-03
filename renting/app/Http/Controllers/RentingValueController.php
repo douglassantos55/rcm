@@ -10,9 +10,12 @@ class RentingValueController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        if (!$request->query('equipment_id')) {
+            return response('equipment_id required', 400);
+        }
+        return RentingValue::where('equipment_id', $request->query('equipment_id'))->get();
     }
 
     /**

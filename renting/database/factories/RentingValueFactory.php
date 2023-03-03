@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Period;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,9 @@ class RentingValueFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'value' => $this->faker->randomFloat(),
+            'period_id' => Period::factory(),
+            'equipment_id' => $this->faker->uuid(),
         ];
     }
 }

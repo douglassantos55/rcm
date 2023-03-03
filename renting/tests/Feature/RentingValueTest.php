@@ -74,4 +74,28 @@ class RentingValueTest extends TestCase
         $response->assertCreated();
         $this->assertDatabaseCount(RentingValue::class, 2);
     }
+
+    public function test_list_by_equipment()
+    {
+        RentingValue::factory()->count(10)->create(['equipment_id' => 'test']);
+        RentingValue::factory()->count(20)->create(['equipment_id' => 'something']);
+
+        $response = $this->get(route('renting-values.index', [
+            'equipment_id' => 'test'
+        ]), ['accept' => 'application/json']);
+
+        $response->assertJsonCount(10);
+    }
+
+    public function test_list_no_equipment()
+    {
+        RentingValue::factory()->count(30)->create();
+
+        $response = $this->get(route('renting-values.index'), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertBadRequest();
+        $response->assertContent('equipment_id required');
+    }
 }
