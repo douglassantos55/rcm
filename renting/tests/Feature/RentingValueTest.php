@@ -98,4 +98,83 @@ class RentingValueTest extends TestCase
         $response->assertBadRequest();
         $response->assertContent('equipment_id required');
     }
+
+    public function test_update_validation()
+    {
+        $response = $this->put(route('renting-values.update'), [
+            'values' => [
+                [
+                    'id' => 'f32b3dd1-d17c-4cdc-846c-0a08e53d6bc6',
+                    'value' => '230,00',
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'values.0.id' => 'The selected id is invalid.',
+            'values.0.value' => 'The value field must be a number.',
+        ]);
+    }
+
+    public function test_update_non_existent()
+    {
+        $period = Period::factory()->create([
+            'name' => 'Daily',
+            'qty_days' => 1
+        ]);
+
+        $value = RentingValue::factory()->create([
+            'value' => 0.75,
+            'period_id' => $period->id,
+            'equipment_id' => 'first',
+        ]);
+
+        $response = $this->put(route('renting-values.update'), [
+            'values' => [
+                [
+                    'id' => $value->id,
+                    'value' => '2.00',
+                ],
+                [
+                    'id' => '73eb0be5-131a-435e-a91a-36d1e623009c',
+                    'value' => 3.00,
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'values.1.id' => 'The selected id is invalid.',
+        ]);
+
+        $this->assertEquals(0.75, $value->refresh()->value);
+    }
+
+    public function test_update()
+    {
+        $daily  = Period::factory()->create(['name' => 'Daily', 'qty_days' => 1]);
+        $weekly  = Period::factory()->create(['name' => 'Weekly', 'qty_days' => 7]);
+
+        $values = RentingValue::factory()->createMany([
+            ['value' => 0.75, 'period_id' => $daily->id, 'equipment_id' => 'first'],
+            ['value' => 0.85, 'period_id' => $weekly->id, 'equipment_id' => 'first'],
+        ]);
+
+        $response = $this->put(route('renting-values.update'), [
+            'values' => [
+                [
+                    'value' => '2.00',
+                    'id' => $values[0]->id,
+                ],
+                [
+                    'value' => 3.00,
+                    'id' => $values[1]->id,
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertSuccessful();
+
+        $this->assertEquals(2, $values[0]->refresh()->value);
+        $this->assertEquals(3, $values[1]->refresh()->value);
+    }
 }

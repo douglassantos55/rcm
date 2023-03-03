@@ -12,11 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('renting_values', function (Blueprint $table) {
-            $table->primary(['equipment_id', 'period_id']);
+            $table->uuid('id')->primary();
             $table->uuid('equipment_id');
             $table->foreignUuid('period_id')->references('id')->on('periods')->cascadeOnDelete();
             $table->decimal('value');
             $table->timestamps();
+            $table->unique(['equipment_id', 'period_id']);
         });
     }
 

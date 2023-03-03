@@ -180,6 +180,7 @@ return [
     */
 
     'attributes' => [
+        'values.*.id' => 'id',
         'values.*.value' => 'value',
         'values.*.period_id' => 'period',
         'values.*.equipment_id' => 'equipment',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RentingValue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RentingValueController extends Controller
 {
@@ -48,9 +49,23 @@ class RentingValueController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, RentingValue $rentingValue)
+    public function update(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'values' => ['required'],
+            'values.*.id' => ['required', 'exists:\App\Models\RentingValue,id'],
+            'values.*.value' => ['required', 'numeric'],
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['values'] as $value) {
+                /** @var RentingValue */
+                $rentingValue = RentingValue::findOrFail($value['id']);
+                $rentingValue->update(['value' => $value['value']]);
+            }
+        });
+
+        return response(null, 200);
     }
 
     /**
