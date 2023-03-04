@@ -43,14 +43,6 @@ class RentingValueController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(RentingValue $rentingValue)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request)
@@ -70,13 +62,5 @@ class RentingValueController extends Controller
         });
 
         return response(null, 200);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(RentingValue $rentingValue)
-    {
-        //
     }
 }
