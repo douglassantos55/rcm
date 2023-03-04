@@ -4,11 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class EquipmentController extends Controller
 {
+    /** @var PendingRequest */
+    private $client;
+
+    public function __construct()
+    {
+        $this->client = Http::baseUrl(env('RENTING_SERVICE'))
+            ->withHeaders(['accept' => 'application/json']);
+    }
+
     public function index()
     {
         return Equipment::all();
@@ -29,9 +39,9 @@ class EquipmentController extends Controller
             return ['equipment_id' => $equipment->id, ...$value];
         }, $request->post('values', []));
 
-        $response = Http::baseUrl(env('RENTING_SERVICE'))
-            ->withHeaders(['accept' => 'application/json'])
-            ->post('/api/renting-values', ['values' => $values]);
+        $response = $this->client->post('/api/renting-values', [
+            'values' => $values,
+        ]);
 
         if (!$response->successful()) {
             DB::rollBack();
@@ -45,7 +55,24 @@ class EquipmentController extends Controller
 
     public function update(EquipmentRequest $request, Equipment $equipment)
     {
-        $equipment->update($request->validated());
+        DB::beginTransaction();
+
+        if (!$equipment->update($request->validated())) {
+            DB::rollBack();
+            return response(null, 500);
+        }
+
+        $response = $this->client->put('/api/renting-values', [
+            'values' => $request->input('values'),
+        ]);
+
+        if (!$response->successful()) {
+            DB::rollBack();
+            return $response;
+        }
+
+        DB::commit();
+
         return $equipment;
     }
 

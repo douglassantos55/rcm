@@ -35,7 +35,6 @@ class EquipmentRequest extends FormRequest
             'purchase_value' => ['required', 'numeric'],
             'unit_value' => ['required', 'numeric'],
             'replace_value' => ['required', 'numeric'],
-
         ];
     }
 }
