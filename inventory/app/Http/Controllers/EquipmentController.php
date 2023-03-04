@@ -45,7 +45,12 @@ class EquipmentController extends Controller
 
         if (!$response->successful()) {
             DB::rollBack();
-            return $response;
+
+            return response(
+                $response->body(),
+                $response->status(),
+                $response->headers()
+            );
         }
 
         DB::commit();
@@ -68,7 +73,12 @@ class EquipmentController extends Controller
 
         if (!$response->successful()) {
             DB::rollBack();
-            return $response;
+
+            return response(
+                $response->body(),
+                $response->status(),
+                $response->headers()
+            );
         }
 
         DB::commit();

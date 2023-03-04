@@ -243,7 +243,7 @@ class EquipmentTest extends TestCase
     {
         Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
 
-        $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
             'description' => 'Ugabuga',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -272,6 +272,7 @@ class EquipmentTest extends TestCase
                 && $request->method() === 'POST' && $response->serverError();
         });
 
+        $response->assertServerError();
         $this->assertNull(Equipment::where('description', 'Ugabuga')->first());
     }
 
@@ -418,8 +419,8 @@ class EquipmentTest extends TestCase
                 && $request->method() === 'PUT' && $response->serverError();
         });
 
+        $response->assertServerError();
         $this->assertNotEquals('Ugabuga', $equipment->refresh()->description);
-        $response->assertStatus(500);
     }
 
 
