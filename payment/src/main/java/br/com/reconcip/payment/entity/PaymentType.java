@@ -19,6 +19,10 @@ public class PaymentType {
     @NotEmpty
     private String name;
 
+    public UUID getId() {
+        return id;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
