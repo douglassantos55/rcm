@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @RestController
@@ -30,5 +31,15 @@ public class PaymentTypeController {
         );
         type.setName(paymentType.getName());
         return this.repository.save(type);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void delete(@PathVariable UUID id) {
+        PaymentType paymentType = this.repository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+        paymentType.setDeletedAt(Instant.now());
+        this.repository.save(paymentType);
     }
 }

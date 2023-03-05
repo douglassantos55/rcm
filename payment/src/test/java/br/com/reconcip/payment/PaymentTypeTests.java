@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 public class PaymentTypeTests {
@@ -66,5 +67,22 @@ public class PaymentTypeTests {
 
         paymentType = this.repository.findById(paymentType.getId()).get();
         assertEquals("credit card", paymentType.getName());
+    }
+
+    @Test
+    void delete() throws Exception {
+        PaymentType paymentType = new PaymentType();
+
+        paymentType.setName("cash");
+        this.repository.save(paymentType);
+
+        this.client.perform(
+                MockMvcRequestBuilders
+                        .delete("/payment-types/" + paymentType.getId().toString())
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        paymentType = this.repository.findById(paymentType.getId()).get();
+        assertNotNull(paymentType.getDeletedAt());
     }
 }

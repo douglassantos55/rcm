@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -19,6 +20,8 @@ public class PaymentType {
     @NotEmpty
     private String name;
 
+    private Instant deletedAt;
+
     public UUID getId() {
         return id;
     }
@@ -29,5 +32,13 @@ public class PaymentType {
 
     public String getName() {
         return name;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }
