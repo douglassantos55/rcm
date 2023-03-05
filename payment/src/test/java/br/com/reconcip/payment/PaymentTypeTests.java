@@ -60,13 +60,13 @@ public class PaymentTypeTests {
         this.client.perform(
                 MockMvcRequestBuilders
                         .put("/payment-types/" + paymentType.getId().toString())
-                        .content("{\"name\":\"credit card\"}")
+                        .content("{\"name\":\"deposit\"}")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
 
         paymentType = this.repository.findById(paymentType.getId()).get();
-        assertEquals("credit card", paymentType.getName());
+        assertEquals("deposit", paymentType.getName());
     }
 
     @Test
@@ -84,5 +84,15 @@ public class PaymentTypeTests {
 
         paymentType = this.repository.findById(paymentType.getId()).get();
         assertNotNull(paymentType.getDeletedAt());
+    }
+
+    @Test
+    void list() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-types")
+                        .accept(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
+                .andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"deposit\",\"deletedAt\":null},{\"name\":\"credit card\",\"deletedAt\":null}]"));
     }
 }

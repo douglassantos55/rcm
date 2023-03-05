@@ -3,13 +3,13 @@ package br.com.reconcip.payment.controller;
 import br.com.reconcip.payment.entity.PaymentType;
 import br.com.reconcip.payment.repository.PaymentTypeRepository;
 import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -41,5 +41,11 @@ public class PaymentTypeController {
         );
         paymentType.setDeletedAt(Instant.now());
         this.repository.save(paymentType);
+    }
+
+    @GetMapping
+    @ResponseBody
+    List<PaymentType> list() {
+        return this.repository.findByDeletedAtNull();
     }
 }
