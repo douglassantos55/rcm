@@ -24,14 +24,14 @@ public class PaymentCondition {
 
     @Min(0)
     @Max(1000)
-    private short increment;
+    private int increment;
 
     @ManyToOne(optional = false)
     private PaymentType paymentType;
 
     @Min(0)
     @Max(98)
-    private short installments;
+    private int installments;
 
     public UUID getId() {
         return id;
@@ -57,11 +57,11 @@ public class PaymentCondition {
         this.title = title;
     }
 
-    public short getIncrement() {
+    public int getIncrement() {
         return increment;
     }
 
-    public void setIncrement(short increment) {
+    public void setIncrement(int increment) {
         this.increment = increment;
     }
 
@@ -73,11 +73,11 @@ public class PaymentCondition {
         this.paymentType = paymentType;
     }
 
-    public short getInstallments() {
+    public int getInstallments() {
         return installments;
     }
 
-    public void setInstallments(short installments) {
+    public void setInstallments(int installments) {
         this.installments = installments;
     }
 }

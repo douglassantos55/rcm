@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/payment-conditions")
 public class PaymentConditionController {
@@ -20,7 +22,6 @@ public class PaymentConditionController {
     private PaymentTypeRepository paymentTypeRepository;
 
     @PostMapping
-    @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentCondition create(@RequestBody @Valid br.com.reconcip.payment.dto.PaymentCondition paymentCondition) {
         PaymentType paymentType = this.paymentTypeRepository.findById(paymentCondition.paymentType()).orElseThrow(() ->
@@ -34,6 +35,25 @@ public class PaymentConditionController {
         condition.setIncrement(paymentCondition.increment());
         condition.setInstallments(paymentCondition.installments());
         condition.setPaymentType(paymentType);
+
+        return this.repository.save(condition);
+    }
+
+    @PutMapping("/{id}")
+    public PaymentCondition update(@RequestBody @Valid br.com.reconcip.payment.dto.PaymentCondition data, @PathVariable UUID id) {
+        PaymentCondition condition = this.repository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+
+        PaymentType paymentType = this.paymentTypeRepository.findById(data.paymentType()).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid payment type")
+        );
+
+        condition.setPaymentType(paymentType);
+        condition.setName(data.name());
+        condition.setInstallments(data.installments());
+        condition.setTitle(data.title());
+        condition.setIncrement(data.increment());
 
         return this.repository.save(condition);
     }
