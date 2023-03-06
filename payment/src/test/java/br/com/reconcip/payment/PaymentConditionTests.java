@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 public class PaymentConditionTests {
@@ -137,5 +137,39 @@ public class PaymentConditionTests {
         assertEquals("Ent 30 60", condition.getName());
         assertEquals(10, condition.getIncrement());
         assertEquals(3, condition.getInstallments());
+    }
+
+    @Test
+    public void delete() throws Exception {
+        PaymentType paymentType = new PaymentType();
+        paymentType.setName("parcelado");
+        this.paymentTypeRepository.save(paymentType);
+
+        PaymentCondition condition = new PaymentCondition();
+        condition.setName("Ent 30");
+        condition.setTitle("Ent 30");
+        condition.setIncrement(5);
+        condition.setPaymentType(paymentType);
+        condition.setInstallments(2);
+
+        this.repository.save(condition);
+
+        this.client.perform(MockMvcRequestBuilders.delete("/payment-conditions/" + condition.getId().toString()))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        condition = this.repository.findById(condition.getId()).get();
+        assertNotNull(condition.getDeletedAt());
+    }
+
+    @Test
+    public void deleteNotFound() throws Exception {
+        this.client.perform(MockMvcRequestBuilders.delete("/payment-conditions/54696b2c-62e8-45f2-aa70-dfdb05c55053"))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    public void deleteInvalidUUID() throws Exception {
+        this.client.perform(MockMvcRequestBuilders.delete("/payment-conditions/not-a-valid-uuid"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 }

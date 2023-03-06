@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -32,6 +33,8 @@ public class PaymentCondition {
     @Min(0)
     @Max(98)
     private int installments;
+
+    private Instant deletedAt;
 
     public UUID getId() {
         return id;
@@ -79,5 +82,13 @@ public class PaymentCondition {
 
     public void setInstallments(int installments) {
         this.installments = installments;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }
