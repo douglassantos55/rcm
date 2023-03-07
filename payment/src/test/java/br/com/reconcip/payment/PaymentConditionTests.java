@@ -172,4 +172,12 @@ public class PaymentConditionTests {
         this.client.perform(MockMvcRequestBuilders.delete("/payment-conditions/not-a-valid-uuid"))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
+    @Test
+    public void list() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-conditions")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"a vista\",\"title\":\"a vista\",\"increment\":0,\"paymentType\":{\"name\":\"cash\",\"deletedAt\":null},\"installments\":0,\"deletedAt\":null},{\"name\":\"Ent 30 60 90\",\"title\":\"Ent 30 60 90\",\"increment\":15,\"paymentType\":{\"name\":\"parcelado\",\"deletedAt\":null},\"installments\":4,\"deletedAt\":null},{\"name\":\"Ent 30 60\",\"title\":\"Ent 30 60\",\"increment\":10,\"paymentType\":{\"name\":\"parcelado\",\"deletedAt\":null},\"installments\":3,\"deletedAt\":null}]"));
+    }
 }

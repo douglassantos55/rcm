@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -68,5 +69,10 @@ public class PaymentConditionController {
 
         condition.setDeletedAt(Instant.now());
         this.repository.save(condition);
+    }
+
+    @GetMapping
+    public List<PaymentCondition> list() {
+        return this.repository.findByDeletedAtNull();
     }
 }
