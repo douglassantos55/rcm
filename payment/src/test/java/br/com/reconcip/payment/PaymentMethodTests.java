@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 public class PaymentMethodTests {
@@ -81,5 +82,33 @@ public class PaymentMethodTests {
                                 .content("{\"name\":\"\"}")
                 )
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    void delete() throws Exception {
+        PaymentMethod method = new PaymentMethod();
+        method.setName("pix");
+        this.repository.save(method);
+
+        this.client.perform(
+                MockMvcRequestBuilders.delete("/payment-methods/" + method.getId().toString())
+        ).andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        method = this.repository.findById(method.getId()).get();
+        assertNotNull(method.getDeletedAt());
+    }
+
+    @Test
+    void deleteNonExistent() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.delete("/payment-methods/3319372d-e772-4712-bb61-34a53207b96c")
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void deleteInvalidUUID() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.delete("/payment-methods/not-an-uuid")
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 }
