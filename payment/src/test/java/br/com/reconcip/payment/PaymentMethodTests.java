@@ -1,5 +1,6 @@
 package br.com.reconcip.payment;
 
+import br.com.reconcip.payment.entity.PaymentMethod;
 import br.com.reconcip.payment.repository.PaymentMethodRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,37 @@ public class PaymentMethodTests {
     void validation() throws Exception {
         this.client.perform(
                         MockMvcRequestBuilders.post("/payment-methods")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"\"}")
+                )
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    void update() throws Exception {
+        PaymentMethod method = new PaymentMethod();
+        method.setName("credit card");
+        this.repository.save(method);
+
+        this.client.perform(
+                MockMvcRequestBuilders.put("/payment-methods/" + method.getId().toString())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"bank deposit\"}")
+        )
+                .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
+                .andExpect(MockMvcResultMatchers.content().json("{\"id\":\"" + method.getId().toString() + "\",\"name\":\"bank deposit\"}"));
+    }
+
+    @Test
+    void updateValidation() throws Exception {
+        PaymentMethod method = new PaymentMethod();
+        method.setName("check");
+        this.repository.save(method);
+
+        this.client.perform(
+                        MockMvcRequestBuilders.put("/payment-methods/" + method.getId().toString())
                                 .accept(MediaType.APPLICATION_JSON)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"\"}")
