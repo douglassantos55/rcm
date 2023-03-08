@@ -131,4 +131,12 @@ public class PaymentMethodTests {
                 MockMvcRequestBuilders.delete("/payment-methods/not-an-uuid")
         ).andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
+    @Test
+    void list() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-methods")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"cash\",\"deletedAt\":null},{\"name\":\"check\",\"deletedAt\":null},{\"name\":\"bank deposit\",\"deletedAt\":null}]"));
+    }
 }
