@@ -85,6 +85,26 @@ public class PaymentMethodTests {
     }
 
     @Test
+    void updateNonExistent() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.put("/payment-methods/d19eb62c-9a1f-4ed1-95ce-b5c6335c27ce")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"bitcoin\"}")
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void updateInvalidUUID() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.put("/payment-methods/not-an-uuid")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"bitcoin\"}")
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
     void delete() throws Exception {
         PaymentMethod method = new PaymentMethod();
         method.setName("pix");
