@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
 
 class EquipmentController extends Controller
 {
@@ -39,9 +40,16 @@ class EquipmentController extends Controller
             return ['equipment_id' => $equipment->id, ...$value];
         }, $request->post('values', []));
 
-        $response = $this->client->post('/api/renting-values', [
-            'values' => $values,
-        ]);
+        $response = RateLimiter::attempt('create-renting-values', 5, function () use ($values) {
+            return $this->client
+                ->timeout(2)
+                ->post('/api/renting-values', ['values' => $values]);
+        });
+
+        if ($response === false) {
+            DB::rollBack();
+            return response('could not reach renting service', 500);
+        }
 
         if (!$response->successful()) {
             DB::rollBack();
