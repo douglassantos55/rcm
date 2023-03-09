@@ -474,7 +474,7 @@ class EquipmentTest extends TestCase
     public function test_create_values_max_attempts()
     {
         for ($i = 0; $i < 5; $i++) {
-            RateLimiter::hit('create-renting-values');
+            RateLimiter::hit('renting-service');
         }
 
         Http::fake(['renting/api/renting-values' => Http::response()]);
@@ -515,6 +515,51 @@ class EquipmentTest extends TestCase
 
         Http::assertNothingSent();
         $this->assertNull(Equipment::firstWhere('description', 'Max attempts'));
+    }
+
+    public function test_update_values_max_attempts()
+    {
+        for ($i = 0; $i < 5; $i++) {
+            RateLimiter::hit('renting-service');
+        }
+
+        Http::fake(['renting/api/renting-values' => Http::response()]);
+
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+
+        $response = $this->withToken($this->validToken)
+            ->put(route('equipment.update', $equipment->id), [
+                'description' => 'Updated',
+                'unit' => 'mt',
+                'in_stock' => '203',
+                'effective_qty' => '223',
+                'purchase_value' => '350.75',
+                'unit_value' => '3.33',
+                'replace_value' => '550.75',
+                'values' => [
+                    [
+                        'value' => '30.00',
+                        'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                        'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                    ],
+                    [
+                        'value' => '5.05',
+                        'id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                        'period_id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                    ],
+                    [
+                        'value' => 12.50,
+                        'id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
+                        'period_id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                    ],
+                ],
+            ], ['accept' => 'application/json']);
+
+        $response->assertServerError();
+        $response->assertContent('could not reach renting service');
+
+        Http::assertNothingSent();
+        $this->assertEquals('Test', $equipment->refresh()->description);
     }
 
     /**

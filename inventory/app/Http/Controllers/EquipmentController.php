@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
+use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
 class EquipmentController extends Controller
@@ -40,10 +42,15 @@ class EquipmentController extends Controller
             return ['equipment_id' => $equipment->id, ...$value];
         }, $request->post('values', []));
 
-        $response = RateLimiter::attempt('create-renting-values', 5, function () use ($values) {
-            return $this->client
-                ->timeout(2)
-                ->post('/api/renting-values', ['values' => $values]);
+        $response = RateLimiter::attempt('renting-service', 5, function () use ($values) {
+            try {
+                return $this->client->timeout(2)->post('/api/renting-values', [
+                    'values' => $values
+                ]);
+            } catch (HttpClientException $e) {
+                Log::error('could not reach renting service: ' . $e->getMessage());
+                return false;
+            }
         });
 
         if ($response === false) {
@@ -70,9 +77,21 @@ class EquipmentController extends Controller
             return response(null, 500);
         }
 
-        $response = $this->client->put('/api/renting-values', [
-            'values' => $request->input('values'),
-        ]);
+        $response = RateLimiter::attempt('renting-service', 5, function () use ($request) {
+            try {
+                return $this->client->timeout(2)->put('/api/renting-values', [
+                    'values' => $request->input('values'),
+                ]);
+            } catch (HttpClientException $e) {
+                Log::error('could not reach renting service: ' . $e->getMessage());
+                return false;
+            }
+        });
+
+        if ($response === false) {
+            DB::rollBack();
+            return response('could not reach renting service', 500);
+        }
 
         if (!$response->successful()) {
             DB::rollBack();
