@@ -426,7 +426,6 @@ class EquipmentTest extends TestCase
         $this->assertNotEquals('Ugabuga', $equipment->refresh()->description);
     }
 
-
     public function test_update_renting_values()
     {
         Http::fake(['renting/api/renting-values' => Http::response()]);
@@ -506,9 +505,84 @@ class EquipmentTest extends TestCase
         $this->assertNull(Equipment::firstWhere('description', 'Exception'));
     }
 
+    public function test_create_values_multiple_times()
+    {
+        Http::fake(['renting/api/renting-values' => Http::response()]);
+
+        $doRequest = function () {
+            return $this->withToken($this->validToken)->post(route('equipment.store'), [
+                'description' => 'Max attempts',
+                'unit' => 'mt',
+                'supplier_id' => null,
+                'profit_percentage' => '30',
+                'weight' => '20.5',
+                'in_stock' => '203',
+                'effective_qty' => '223',
+                'min_qty' => '351',
+                'purchase_value' => '350.75',
+                'unit_value' => '3.33',
+                'replace_value' => '550.75',
+                'values' => [
+                    [
+                        'value' => 12.50,
+                        'id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
+                        'period_id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                    ],
+                ],
+            ], ['accept' => 'application/json']);
+        };
+
+        for ($i = 0; $i < 5; $i++) {
+            $doRequest();
+        }
+
+        $response = $doRequest();
+
+        Http::assertSentCount(6);
+        $response->assertSuccessful();
+    }
+
     public function test_create_values_max_attempts()
     {
+        Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
+
+        $doRequest = function () {
+            return $this->withToken($this->validToken)->post(route('equipment.store'), [
+                'description' => 'Max attempts',
+                'unit' => 'mt',
+                'supplier_id' => null,
+                'profit_percentage' => '30',
+                'weight' => '20.5',
+                'in_stock' => '203',
+                'effective_qty' => '223',
+                'min_qty' => '351',
+                'purchase_value' => '350.75',
+                'unit_value' => '3.33',
+                'replace_value' => '550.75',
+                'values' => [
+                    [
+                        'value' => 12.50,
+                        'id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
+                        'period_id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                    ],
+                ],
+            ], ['accept' => 'application/json']);
+        };
+
         for ($i = 0; $i < 5; $i++) {
+            $doRequest();
+        }
+
+        $response = $doRequest();
+
+        Http::assertSentCount(5);
+        $response->assertServerError();
+        $response->assertContent('renting service out of order');
+    }
+
+    public function test_create_values_reset()
+    {
+        for ($i = 0; $i < 4; $i++) {
             RateLimiter::hit('renting-service');
         }
 
@@ -535,11 +609,9 @@ class EquipmentTest extends TestCase
             ],
         ], ['accept' => 'application/json']);
 
-        $response->assertServerError();
-        $response->assertContent('renting service out of order');
-
-        Http::assertNothingSent();
-        $this->assertNull(Equipment::firstWhere('description', 'Max attempts'));
+        Http::assertSentCount(1);
+        $response->assertSuccessful();
+        $this->assertEquals(5, RateLimiter::remaining('renting-service', 5));
     }
 
     public function test_update_values_exception()
@@ -575,14 +647,88 @@ class EquipmentTest extends TestCase
         $this->assertEquals('Test', $equipment->refresh()->description);
     }
 
+    public function test_update_values_multiple_times()
+    {
+        Http::fake(['renting/api/renting-values' => Http::response()]);
+
+        $doRequest = function (Equipment $equipment) {
+            return $this->withToken($this->validToken)
+                ->put(route('equipment.update', $equipment->id), [
+                    'description' => 'Updated',
+                    'unit' => 'mt',
+                    'in_stock' => '203',
+                    'effective_qty' => '223',
+                    'purchase_value' => '350.75',
+                    'unit_value' => '3.33',
+                    'replace_value' => '550.75',
+                    'values' => [
+                        [
+                            'value' => '30.00',
+                            'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                            'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                        ],
+                    ],
+                ], ['accept' => 'application/json']);
+        };
+
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+
+        for ($i = 0; $i < 5; $i++) {
+            $doRequest($equipment);
+        }
+
+        $response = $doRequest($equipment);
+
+        Http::assertSentCount(6);
+        $response->assertSuccessful();
+    }
+
     public function test_update_values_max_attempts()
     {
+        Http::fake(['renting/api/renting-values' => fn () => throw new \Exception()]);
+
+        $doRequest = function (Equipment $equipment) {
+            return $this->withToken($this->validToken)
+                ->put(route('equipment.update', $equipment->id), [
+                    'description' => 'Updated',
+                    'unit' => 'mt',
+                    'in_stock' => '203',
+                    'effective_qty' => '223',
+                    'purchase_value' => '350.75',
+                    'unit_value' => '3.33',
+                    'replace_value' => '550.75',
+                    'values' => [
+                        [
+                            'value' => '30.00',
+                            'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                            'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                        ],
+                    ],
+                ], ['accept' => 'application/json']);
+        };
+
+        $equipment = Equipment::factory()->create(['description' => 'Test']);
+
         for ($i = 0; $i < 5; $i++) {
+            $doRequest($equipment);
+        }
+
+        $response = $doRequest($equipment);
+
+        Http::assertNothingSent();
+        $response->assertServerError();
+        $response->assertContent('renting service out of order');
+
+        $this->assertEquals('Test', $equipment->refresh()->description);
+    }
+
+    public function test_update_values_reset()
+    {
+        for ($i = 0; $i < 4; $i++) {
             RateLimiter::hit('renting-service');
         }
 
         Http::fake(['renting/api/renting-values' => Http::response()]);
-
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
         $response = $this->withToken($this->validToken)
@@ -603,11 +749,9 @@ class EquipmentTest extends TestCase
                 ],
             ], ['accept' => 'application/json']);
 
-        $response->assertServerError();
-        $response->assertContent('renting service out of order');
-
-        Http::assertNothingSent();
-        $this->assertEquals('Test', $equipment->refresh()->description);
+        Http::assertSentCount(1);
+        $response->assertSuccessful();
+        $this->assertEquals(5, RateLimiter::remaining('renting-service', 5));
     }
 
     /**

@@ -29,15 +29,16 @@ class RentingService
         }
 
         try {
-            RateLimiter::hit(self::NAME);
-
             $response = $this->client
                 ->timeout(2)
                 ->post('/api/renting-values', ['values' => $values])
                 ->throwIfServerError();
 
+            RateLimiter::clear(self::NAME);
             return response()->fromClient($response);
         } catch (\Exception $ex) {
+            RateLimiter::hit(self::NAME);
+
             Log::error('could not create renting values: ' . $ex->getMessage());
             return response('could not reach renting service', 500);
         }
@@ -50,15 +51,16 @@ class RentingService
         }
 
         try {
-            RateLimiter::hit(self::NAME);
-
             $response = $this->client
                 ->timeout(2)
                 ->put('/api/renting-values', ['values' => $values])
                 ->throwIfServerError();
 
+            RateLimiter::clear(self::NAME);
             return response()->fromClient($response);
         } catch (\Exception $ex) {
+            RateLimiter::hit(self::NAME);
+
             Log::error('could not update renting values: ' . $ex->getMessage());
             return response('could not reach renting service', 500);
         }
