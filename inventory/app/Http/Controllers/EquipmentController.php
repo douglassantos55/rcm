@@ -5,27 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\EquipmentRequest;
 use App\Http\Services\RentingService;
 use App\Models\Equipment;
-use Illuminate\Http\Client\HttpClientException;
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 
 class EquipmentController extends Controller
 {
-    /** @var PendingRequest */
-    private $client;
-
-    /** @var RentingService */
     private $service;
 
     public function __construct(RentingService $service)
     {
         $this->service = $service;
-
-        $this->client = Http::baseUrl(env('RENTING_SERVICE'))
-            ->withHeaders(['accept' => 'application/json']);
     }
 
     public function index()
@@ -61,31 +49,13 @@ class EquipmentController extends Controller
     public function update(EquipmentRequest $request, Equipment $equipment)
     {
         DB::beginTransaction();
+        $equipment->update($request->validated());
 
-        if (!$equipment->update($request->validated())) {
+        $response = $this->service->updateRentingValues($request->input('values'));
+
+        if (!$response->isSuccessful()) {
             DB::rollBack();
-            return response(null, 500);
-        }
-
-        $response = RateLimiter::attempt('renting-service', 5, function () use ($request) {
-            try {
-                return $this->client->timeout(2)->put('/api/renting-values', [
-                    'values' => $request->input('values'),
-                ]);
-            } catch (HttpClientException $e) {
-                Log::error('could not reach renting service: ' . $e->getMessage());
-                return false;
-            }
-        });
-
-        if ($response === false) {
-            DB::rollBack();
-            return response('could not reach renting service', 500);
-        }
-
-        if (!$response->successful()) {
-            DB::rollBack();
-            return response()->fromClient($response);
+            return $response;
         }
 
         DB::commit();

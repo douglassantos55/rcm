@@ -29,6 +29,8 @@ class RentingService
         }
 
         try {
+            RateLimiter::hit(self::NAME);
+
             $response = $this->client
                 ->timeout(2)
                 ->post('/api/renting-values', ['values' => $values])
@@ -37,6 +39,27 @@ class RentingService
             return response()->fromClient($response);
         } catch (\Exception $ex) {
             Log::error('could not create renting values: ' . $ex->getMessage());
+            return response('could not reach renting service', 500);
+        }
+    }
+
+    public function updateRentingValues(array $values)
+    {
+        if (RateLimiter::tooManyAttempts(self::NAME, self::MAX_ATTEMPTS)) {
+            return response('renting service out of order', 500);
+        }
+
+        try {
+            RateLimiter::hit(self::NAME);
+
+            $response = $this->client
+                ->timeout(2)
+                ->put('/api/renting-values', ['values' => $values])
+                ->throwIfServerError();
+
+            return response()->fromClient($response);
+        } catch (\Exception $ex) {
+            Log::error('could not update renting values: ' . $ex->getMessage());
             return response('could not reach renting service', 500);
         }
     }

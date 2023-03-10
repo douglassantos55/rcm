@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
@@ -116,6 +115,7 @@ class EquipmentTest extends TestCase
             'purchase_value' => '350.75',
             'unit_value' => '3.33',
             'replace_value' => '550.75',
+            'values' => [],
         ], ['accept' => 'application/json']);
 
         $response->assertOk();
@@ -604,7 +604,7 @@ class EquipmentTest extends TestCase
             ], ['accept' => 'application/json']);
 
         $response->assertServerError();
-        $response->assertContent('could not reach renting service');
+        $response->assertContent('renting service out of order');
 
         Http::assertNothingSent();
         $this->assertEquals('Test', $equipment->refresh()->description);
