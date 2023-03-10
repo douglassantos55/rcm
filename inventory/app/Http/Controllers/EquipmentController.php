@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
+use App\Http\Services\RentingService;
 use App\Models\Equipment;
 use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Http\Client\PendingRequest;
@@ -16,8 +17,13 @@ class EquipmentController extends Controller
     /** @var PendingRequest */
     private $client;
 
-    public function __construct()
+    /** @var RentingService */
+    private $service;
+
+    public function __construct(RentingService $service)
     {
+        $this->service = $service;
+
         $this->client = Http::baseUrl(env('RENTING_SERVICE'))
             ->withHeaders(['accept' => 'application/json']);
     }
@@ -35,36 +41,20 @@ class EquipmentController extends Controller
     public function store(EquipmentRequest $request)
     {
         DB::beginTransaction();
-
         $equipment = Equipment::create($request->validated());
 
-        $values = array_map(function (array $value) use ($equipment) {
-            return ['equipment_id' => $equipment->id, ...$value];
-        }, $request->post('values', []));
+        $response = $this->service->createRentingValues(
+            array_map(function (array $value) use ($equipment) {
+                return ['equipment_id' => $equipment->id, ...$value];
+            }, $request->post('values', []))
+        );
 
-        $response = RateLimiter::attempt('renting-service', 5, function () use ($values) {
-            try {
-                return $this->client->timeout(2)->post('/api/renting-values', [
-                    'values' => $values
-                ]);
-            } catch (HttpClientException $e) {
-                Log::error('could not reach renting service: ' . $e->getMessage());
-                return false;
-            }
-        });
-
-        if ($response === false) {
+        if (!$response->isSuccessful()) {
             DB::rollBack();
-            return response('could not reach renting service', 500);
-        }
-
-        if (!$response->successful()) {
-            DB::rollBack();
-            return response()->fromClient($response);
+            return $response;
         }
 
         DB::commit();
-
         return $equipment;
     }
 
@@ -99,7 +89,6 @@ class EquipmentController extends Controller
         }
 
         DB::commit();
-
         return $equipment;
     }
 

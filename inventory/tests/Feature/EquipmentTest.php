@@ -536,7 +536,7 @@ class EquipmentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         $response->assertServerError();
-        $response->assertContent('could not reach renting service');
+        $response->assertContent('renting service out of order');
 
         Http::assertNothingSent();
         $this->assertNull(Equipment::firstWhere('description', 'Max attempts'));

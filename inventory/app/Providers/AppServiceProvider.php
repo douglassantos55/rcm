@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Services\RentingService;
 use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
@@ -13,7 +14,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(RentingService::class, function () {
+            return new RentingService(env('RENTING_SERVICE'));
+        });
     }
 
     /**
