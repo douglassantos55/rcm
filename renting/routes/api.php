@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PeriodController;
+use App\Http\Controllers\RentController;
 use App\Http\Controllers\RentingValueController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::apiResources([
     '/periods' => PeriodController::class,
     '/customers' => CustomerController::class,
+    '/rents' => RentController::class,
 ]);
 
 Route::controller(RentingValueController::class)->group(function () {
