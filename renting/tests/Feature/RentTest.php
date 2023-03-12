@@ -431,4 +431,53 @@ class RentTest extends TestCase
         $response->assertNoContent();
         $this->assertSoftDeleted($rent);
     }
+
+    public function test_list_ignores_deleted()
+    {
+        Rent::factory()->count(20)->create();
+        Rent::factory()->count(10)->create(['deleted_at' => now()]);
+
+        $response = $this->get(route('rents.index'), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(20, 'data');
+    }
+
+    public function test_list_paginates()
+    {
+        Rent::factory()->count(100)->create();
+
+        $response = $this->get(route('rents.index'), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(50, 'data');
+    }
+
+    public function test_list_filter_by_customer()
+    {
+        $customer = Customer::factory()->create();
+
+        Rent::factory()->count(30)->create();
+        Rent::factory()->count(20)->create(['customer_id' => $customer->id]);
+
+        $response = $this->get(route('rents.index', ['customer' => $customer->id]), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(20, 'data');
+    }
+
+    public function test_list_filter_by_number()
+    {
+        $customer = Customer::factory()->create();
+        $rents = Rent::factory()->count(30)->create();
+
+        $response = $this->get(route('rents.index', ['number' => $rents[20]->id]), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(1, 'data');
+    }
 }

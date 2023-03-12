@@ -4,15 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RentRequest;
 use App\Models\Rent;
+use Illuminate\Http\Request;
 
 class RentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $rents = Rent::query();
+
+        if ($request->query('number')) {
+            $rents->where('id', $request->query('number'));
+        }
+
+        if ($request->query('customer')) {
+            $rents->where('customer_id', $request->query('customer'));
+        }
+
+        return $rents->paginate(50);
     }
 
     /**
