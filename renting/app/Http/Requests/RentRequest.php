@@ -3,8 +3,11 @@
 namespace App\Http\Requests;
 
 use App\Http\Services\PaymentService;
+use App\Models\Customer;
+use App\Models\Period;
 use App\Rules\Exists;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RentRequest extends FormRequest
 {
@@ -31,11 +34,17 @@ class RentRequest extends FormRequest
             'paid_value' => ['nullable', 'numeric'],
             'delivery_value' => ['nullable', 'numeric'],
             'bill' => ['nullable', 'numeric'],
-            'customer_id' => ['required', 'exists:\App\Models\Customer,id'],
-            'period_id' => ['required', 'exists:\App\Models\Period,id'],
             'payment_type_id' => ['required', new Exists($paymentService)],
             'payment_method_id' => ['required', new Exists($paymentService)],
             'payment_condition_id' => ['required', new Exists($paymentService)],
+            'customer_id' => [
+                'required',
+                Rule::exists(Customer::class, 'id')->withoutTrashed(),
+            ],
+            'period_id' => [
+                'required',
+                Rule::exists(Period::class, 'id')->withoutTrashed(),
+            ],
         ];
     }
 }

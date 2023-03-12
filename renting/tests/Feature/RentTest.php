@@ -54,6 +54,72 @@ class RentTest extends TestCase
         ]);
     }
 
+    public function test_create_deleted_customer()
+    {
+        Http::fake(['payment/*' => Http::response(['foo' => 'bar'])]);
+
+        $period = Period::factory()->create();
+        $customer = Customer::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->post(route('rents.store'), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'discount' => '',
+            'paid_value' => '',
+            'delivery_value' => '',
+            'bill' => '',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => '',
+            'observations' => '',
+            'transporter' => '',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'customer_id' => 'The selected customer id is invalid.',
+        ]);
+    }
+
+    public function test_create_deleted_period()
+    {
+        Http::fake(['payment/*' => Http::response(['foo' => 'bar'])]);
+
+        $customer = Customer::factory()->create();
+        $period = Period::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->post(route('rents.store'), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'discount' => '',
+            'paid_value' => '',
+            'delivery_value' => '',
+            'bill' => '',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => '',
+            'observations' => '',
+            'transporter' => '',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'period_id' => 'The selected period id is invalid.',
+        ]);
+    }
+
     public function test_create()
     {
         Http::fake(['payment/*' => Http::response(['foo' => 'bar'])]);
@@ -62,8 +128,8 @@ class RentTest extends TestCase
         $customer = Customer::factory()->create();
 
         $response = $this->post(route('rents.store'), [
-            'start_date' => '2020-10-10',
-            'end_date' => '2020-10-20',
+            'start_date' => '2020-10-10 22:52:30',
+            'end_date' => '2020-10-20 22:52:30',
             'qty_days' => '10',
             'discount' => '',
             'paid_value' => '',
@@ -127,6 +193,138 @@ class RentTest extends TestCase
             'payment_method_id' => 'The selected payment method id is invalid.',
             'payment_condition_id' => 'The selected payment condition id is invalid.',
         ]);
+    }
+
+    public function test_update_deleted_customer()
+    {
+        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+
+        $rent = Rent::factory()->create();
+        $period = Period::factory()->create();
+        $customer = Customer::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->put(route('rents.update', $rent->id), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'discount' => '',
+            'paid_value' => '',
+            'delivery_value' => '',
+            'bill' => '',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => '',
+            'observations' => '',
+            'transporter' => '',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'customer_id' => 'The selected customer id is invalid.',
+        ]);
+    }
+
+    public function test_update_deleted_period()
+    {
+        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+
+        $rent = Rent::factory()->create();
+        $customer = Customer::factory()->create();
+        $period = Period::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->put(route('rents.update', $rent->id), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'discount' => '',
+            'paid_value' => '',
+            'delivery_value' => '',
+            'bill' => '',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => '',
+            'observations' => '',
+            'transporter' => '',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'period_id' => 'The selected period id is invalid.',
+        ]);
+    }
+
+    public function test_update_non_existent()
+    {
+        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+
+        $period = Period::factory()->create();
+        $customer = Customer::factory()->create();
+        $uuid = '62578f05-85f2-442b-8412-df47d188e01b';
+
+        $response = $this->put(route('rents.update', $uuid), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'discount' => '',
+            'paid_value' => '',
+            'delivery_value' => '',
+            'bill' => '',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => '',
+            'observations' => '',
+            'transporter' => '',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $response->assertNotFound();
+    }
+
+    public function test_update_soft_deleted_rent()
+    {
+        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+
+        $rent = Rent::factory()->create(['deleted_at' => now()]);
+        $period = Period::factory()->create();
+        $customer = Customer::factory()->create();
+
+        $response = $this->put(route('rents.update', $rent->id), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'discount' => '',
+            'paid_value' => '',
+            'delivery_value' => '',
+            'bill' => '',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => '',
+            'observations' => '',
+            'transporter' => '',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $response->assertNotFound();
     }
 
     public function test_update()
