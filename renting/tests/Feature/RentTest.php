@@ -85,4 +85,84 @@ class RentTest extends TestCase
         $response->assertCreated();
         $this->assertCount(1, Rent::all());
     }
+
+    public function test_update_validation()
+    {
+        Http::fake(['payment/*' => Http::response(null, 404)]);
+
+        $rent = Rent::factory()->create();
+
+        $response = $this->put(route('rents.update', $rent->id), [
+            'start_date' => '2020-20-10',
+            'end_date' => '2020-20-20',
+            'qty_days' => '9.55',
+            'discount' => 'hundred',
+            'paid_value' => 'million',
+            'delivery_value' => 'some bucks',
+            'bill' => 'dollar',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => 'nice dude',
+            'observations' => 'nothing to add',
+            'transporter' => '',
+            'customer_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'period_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'start_date' => 'The start date field must be a valid date.',
+            'end_date' => 'The end date field must be a valid date.',
+            'qty_days' => 'The qty days field must be an integer.',
+            'discount' => 'The discount field must be a number.',
+            'paid_value' => 'The paid value field must be a number.',
+            'delivery_value' => 'The delivery value field must be a number.',
+            'bill' => 'The bill field must be a number.',
+            'customer_id' => 'The selected customer id is invalid.',
+            'period_id' => 'The selected period id is invalid.',
+            'payment_type_id' => 'The selected payment type id is invalid.',
+            'payment_method_id' => 'The selected payment method id is invalid.',
+            'payment_condition_id' => 'The selected payment condition id is invalid.',
+        ]);
+    }
+
+    public function test_update()
+    {
+        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+
+        $rent = Rent::factory()->create();
+        $period = Period::factory()->create();
+        $customer = Customer::factory()->create();
+
+        $response = $this->put(route('rents.update', $rent->id), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'discount' => '',
+            'paid_value' => '',
+            'delivery_value' => '',
+            'bill' => '',
+            'check_info' => '',
+            'delivery_address' => '',
+            'usage_address' => '',
+            'discount_reason' => '',
+            'observations' => '',
+            'transporter' => '',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+        ], ['accept' => 'application/json']);
+
+        $rent->refresh();
+        $response->assertSuccessful();
+
+        $this->assertEquals(10, $rent->qty_days);
+        $this->assertEquals($period->id, $rent->period_id);
+        $this->assertEquals($customer->id, $rent->customer_id);
+    }
 }

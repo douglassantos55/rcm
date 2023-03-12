@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Services\PaymentService;
+use App\Http\Requests\RentRequest;
 use App\Models\Rent;
-use App\Rules\Exists;
-use Illuminate\Http\Request;
 
 class RentController extends Controller
 {
@@ -20,24 +18,9 @@ class RentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, PaymentService $paymentService)
+    public function store(RentRequest $request)
     {
-        $validated = $request->validate([
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date'],
-            'qty_days' => ['required', 'integer'],
-            'discount' => ['nullable', 'numeric'],
-            'paid_value' => ['nullable', 'numeric'],
-            'delivery_value' => ['nullable', 'numeric'],
-            'bill' => ['nullable', 'numeric'],
-            'customer_id' => ['required', 'exists:\App\Models\Customer,id'],
-            'period_id' => ['required', 'exists:\App\Models\Period,id'],
-            'payment_type_id' => ['required', new Exists($paymentService)],
-            'payment_method_id' => ['required', new Exists($paymentService)],
-            'payment_condition_id' => ['required', new Exists($paymentService)],
-        ]);
-
-        return response(Rent::create($validated)->refresh(), 201);
+        return response(Rent::create($request->validated())->refresh(), 201);
     }
 
     /**
@@ -51,9 +34,10 @@ class RentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(RentRequest $request, Rent $rent)
     {
-        //
+        $rent->update($request->validated());
+        return $rent;
     }
 
     /**
