@@ -363,4 +363,38 @@ class RentTest extends TestCase
         $this->assertEquals($period->id, $rent->period_id);
         $this->assertEquals($customer->id, $rent->customer_id);
     }
+
+    public function test_show_soft_deleted_rent()
+    {
+        $rent = Rent::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->get(route('rents.show', $rent->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_show_non_existent_rent()
+    {
+        $uuid = '62578f05-85f2-442b-8412-df47d188e01b';
+
+        $response = $this->get(route('rents.show', $uuid), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_show_rent()
+    {
+        $rent = Rent::factory()->create();
+
+        $response = $this->get(route('rents.show', $rent->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertSuccessful();
+        $response->assertJson($rent->refresh()->toArray());
+    }
 }
