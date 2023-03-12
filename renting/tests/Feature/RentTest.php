@@ -397,4 +397,38 @@ class RentTest extends TestCase
         $response->assertSuccessful();
         $response->assertJson($rent->refresh()->toArray());
     }
+
+    public function test_delete_non_existent()
+    {
+        $uuid = '62578f05-85f2-442b-8412-df47d188e01b';
+
+        $response = $this->delete(route('rents.destroy', $uuid), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_delete_soft_deleted()
+    {
+        $rent = Rent::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->delete(route('rents.destroy', $rent->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_delete()
+    {
+        $rent = Rent::factory()->create();
+
+        $response = $this->delete(route('rents.destroy', $rent->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertNoContent();
+        $this->assertSoftDeleted($rent);
+    }
 }
