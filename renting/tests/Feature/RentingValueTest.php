@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Period;
 use App\Models\RentingValue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class RentingValueTest extends TestCase
@@ -32,6 +33,8 @@ class RentingValueTest extends TestCase
 
     public function test_create_duplicated_period_and_equipment()
     {
+        Http::fake(['*' => Http::response(['id' => 'aoeu'])]);
+
         $period = Period::factory()->create(['name' => 'Daily']);
 
         $response = $this->post(route('renting-values.store'), [
@@ -54,6 +57,8 @@ class RentingValueTest extends TestCase
 
     public function test_create_duplicated_period()
     {
+        Http::fake(['*' => Http::response(['id' => 'aoeu'])]);
+
         $period = Period::factory()->create(['name' => 'Daily']);
 
         $response = $this->post(route('renting-values.store'), [
@@ -73,6 +78,31 @@ class RentingValueTest extends TestCase
 
         $response->assertCreated();
         $this->assertDatabaseCount(RentingValue::class, 2);
+    }
+
+    public function test_create_soft_deleted_period()
+    {
+        $period = Period::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->post(route('renting-values.store'), [
+            'values' => [
+                [
+                    'value' => '230.00',
+                    'period_id' => $period->id,
+                    'equipment_id' => '8dde394d-bd3e-4a4e-8483-4ff3bd8e8f49',
+                ],
+                [
+                    'value' => 30.00,
+                    'period_id' => $period->id,
+                    'equipment_id' => '11107582-2f38-4d12-a347-9b435b51686e',
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'values.0.period_id' => 'The selected period is invalid.',
+            'values.1.period_id' => 'The selected period is invalid.',
+        ]);
     }
 
     public function test_list_by_equipment()
