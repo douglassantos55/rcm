@@ -7,7 +7,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class InventoryService
+class InventoryService implements Service
 {
     /** @var PendingRequest */
     private $client;
@@ -23,10 +23,15 @@ class InventoryService
     public function getEquipment(string $uuid): ?array
     {
         try {
-            return $this->client->get('/api/equipment', ['id' => $uuid])->json();
+            return $this->client->get('/api/equipment/' . $uuid)->json();
         } catch (HttpClientException $ex) {
             Log::info('could not get equipment: ' . $ex->getMessage(), ['id' => $uuid]);
             return null;
         }
+    }
+
+    public function has(string $entity, string $identifier): bool
+    {
+        return boolval($this->getEquipment($identifier));
     }
 }

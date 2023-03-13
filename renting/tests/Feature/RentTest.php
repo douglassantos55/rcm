@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Item;
 use App\Models\Period;
 use App\Models\Rent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,7 +16,10 @@ class RentTest extends TestCase
 
     public function test_create_validation()
     {
-        Http::fake(['payment/*' => Http::response(null, 404)]);
+        Http::fake([
+            'payment/*' => Http::response(null, 404),
+            'inventory/*' => Http::response(null, 404),
+        ]);
 
         $response = $this->post(route('rents.store'), [
             'start_date' => '2020-20-10',
@@ -36,6 +40,10 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => '0.5', 'equipment_id' => 'aoeu'],
+                ['qty' => '5', 'equipment_id' => 'snth'],
+            ],
         ], ['accept' => 'application/json']);
 
         $response->assertJsonValidationErrors([
@@ -51,6 +59,9 @@ class RentTest extends TestCase
             'payment_type_id' => 'The selected payment type id is invalid.',
             'payment_method_id' => 'The selected payment method id is invalid.',
             'payment_condition_id' => 'The selected payment condition id is invalid.',
+            'items.0.qty' => 'The items.0.qty field must be an integer.',
+            'items.0.equipment_id' => 'The selected items.0.equipment_id is invalid.',
+            'items.1.equipment_id' => 'The selected items.1.equipment_id is invalid.',
         ]);
     }
 
@@ -122,7 +133,10 @@ class RentTest extends TestCase
 
     public function test_create()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'bar'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'bar']),
+            'inventory/*' => Http::response(['rent_value' => '0.35', 'unit_value' => 1000]),
+        ]);
 
         $period = Period::factory()->create();
         $customer = Customer::factory()->create();
@@ -146,15 +160,23 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => '5', 'equipment_id' => '73686c69-2307-48bb-bb5f-c4acbb71aa58'],
+                ['qty' => '5', 'equipment_id' => '3ac65dee-367e-48ec-8486-08d6e729cca4'],
+            ],
         ], ['accept' => 'application/json']);
 
         $response->assertCreated();
         $this->assertCount(1, Rent::all());
+        $this->assertCount(2, Item::all());
     }
 
     public function test_update_validation()
     {
-        Http::fake(['payment/*' => Http::response(null, 404)]);
+        Http::fake([
+            'payment/*' => Http::response(null, 404),
+            'inventory/*' => Http::response(null, 404),
+        ]);
 
         $rent = Rent::factory()->create();
 
@@ -177,6 +199,10 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => 'five', 'equipment_id' => '73686c69-2307-48bb-bb5f-c4acbb71aa58'],
+                ['qty' => '5', 'equipment_id' => '3ac65dee-367e-48ec-8486-08d6e729cca4'],
+            ],
         ], ['accept' => 'application/json']);
 
         $response->assertJsonValidationErrors([
@@ -192,12 +218,20 @@ class RentTest extends TestCase
             'payment_type_id' => 'The selected payment type id is invalid.',
             'payment_method_id' => 'The selected payment method id is invalid.',
             'payment_condition_id' => 'The selected payment condition id is invalid.',
+            'items.0.qty' => 'The items.0.qty field must be an integer.',
+            'items.0.equipment_id' => 'The selected items.0.equipment_id is invalid.',
+            'items.1.equipment_id' => 'The selected items.1.equipment_id is invalid.',
         ]);
     }
 
     public function test_update_deleted_customer()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'baz']),
+            'inventory/*' => Http::response([
+                'rent_value' => '0.3', 'unit_value' => '250'
+            ]),
+        ]);
 
         $rent = Rent::factory()->create();
         $period = Period::factory()->create();
@@ -222,6 +256,10 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => '5', 'equipment_id' => '73686c69-2307-48bb-bb5f-c4acbb71aa58'],
+                ['qty' => '5', 'equipment_id' => '3ac65dee-367e-48ec-8486-08d6e729cca4'],
+            ],
         ], ['accept' => 'application/json']);
 
         $response->assertJsonValidationErrors([
@@ -231,7 +269,12 @@ class RentTest extends TestCase
 
     public function test_update_deleted_period()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'baz']),
+            'inventory/*' => Http::response([
+                'rent_value' => '0.3', 'unit_value' => '250'
+            ]),
+        ]);
 
         $rent = Rent::factory()->create();
         $customer = Customer::factory()->create();
@@ -256,6 +299,10 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => '5', 'equipment_id' => '73686c69-2307-48bb-bb5f-c4acbb71aa58'],
+                ['qty' => '5', 'equipment_id' => '3ac65dee-367e-48ec-8486-08d6e729cca4'],
+            ],
         ], ['accept' => 'application/json']);
 
         $response->assertJsonValidationErrors([
@@ -265,7 +312,12 @@ class RentTest extends TestCase
 
     public function test_update_non_existent()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'baz']),
+            'inventory/*' => Http::response([
+                'rent_value' => '0.3', 'unit_value' => '250'
+            ]),
+        ]);
 
         $period = Period::factory()->create();
         $customer = Customer::factory()->create();
@@ -290,6 +342,10 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => '5', 'equipment_id' => '73686c69-2307-48bb-bb5f-c4acbb71aa58'],
+                ['qty' => '5', 'equipment_id' => '3ac65dee-367e-48ec-8486-08d6e729cca4'],
+            ],
         ], ['accept' => 'application/json']);
 
         $response->assertNotFound();
@@ -297,7 +353,12 @@ class RentTest extends TestCase
 
     public function test_update_soft_deleted_rent()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'baz']),
+            'inventory/*' => Http::response([
+                'rent_value' => '0.3', 'unit_value' => '250'
+            ]),
+        ]);
 
         $rent = Rent::factory()->create(['deleted_at' => now()]);
         $period = Period::factory()->create();
@@ -322,6 +383,10 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => '5', 'equipment_id' => '73686c69-2307-48bb-bb5f-c4acbb71aa58'],
+                ['qty' => '5', 'equipment_id' => '3ac65dee-367e-48ec-8486-08d6e729cca4'],
+            ],
         ], ['accept' => 'application/json']);
 
         $response->assertNotFound();
@@ -329,9 +394,23 @@ class RentTest extends TestCase
 
     public function test_update()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'baz'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'baz']),
+            'inventory/api/equipment/3272' => Http::response([
+                'rent_value' => '0.3', 'unit_value' => '250'
+            ]),
+            'inventory/api/equipment/3030' => Http::response([
+                'rent_value' => '0.75', 'unit_value' => '150'
+            ]),
+        ]);
 
         $rent = Rent::factory()->create();
+
+        $rent->items()->createMany([
+            ['equipment_id' => '3272', 'qty' => 10],
+            ['equipment_id' => '3030', 'qty' => 1],
+        ]);
+
         $period = Period::factory()->create();
         $customer = Customer::factory()->create();
 
@@ -354,10 +433,19 @@ class RentTest extends TestCase
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => 2, 'equipment_id' => '3272'],
+            ],
         ], ['accept' => 'application/json']);
 
         $rent->refresh();
         $response->assertSuccessful();
+
+        $this->assertCount(1, Item::all());
+        $this->assertCount(1, $rent->items);
+        $this->assertEquals(2, $rent->items[0]->qty);
+        $this->assertEquals(0.6, $rent->items[0]->rent_value);
+        $this->assertEquals(500, $rent->items[0]->unit_value);
 
         $this->assertEquals(10, $rent->qty_days);
         $this->assertEquals($period->id, $rent->period_id);
@@ -471,7 +559,6 @@ class RentTest extends TestCase
 
     public function test_list_filter_by_number()
     {
-        $customer = Customer::factory()->create();
         $rents = Rent::factory()->count(30)->create();
 
         $response = $this->get(route('rents.index', ['number' => $rents[20]->id]), [

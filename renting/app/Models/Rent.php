@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Rent extends Model
@@ -31,4 +32,11 @@ class Rent extends Model
         'payment_method_id',
         'payment_condition_id',
     ];
+
+    protected $with = ['items'];
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(Item::class);
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\RentRequest;
 use App\Models\Rent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RentController extends Controller
 {
@@ -31,7 +32,10 @@ class RentController extends Controller
      */
     public function store(RentRequest $request)
     {
-        return response(Rent::create($request->validated())->refresh(), 201);
+        $rent = Rent::create($request->validated());
+        $rent->items()->createMany($request->validated('items'));
+
+        return response($rent->refresh(), 201);
     }
 
     /**
@@ -47,7 +51,12 @@ class RentController extends Controller
      */
     public function update(RentRequest $request, Rent $rent)
     {
-        $rent->update($request->validated());
+        DB::transaction(function () use ($rent, $request) {
+            $rent->update($request->validated());
+            $rent->items()->delete();
+            $rent->items()->createMany($request->validated('items'));
+        });
+
         return $rent;
     }
 
