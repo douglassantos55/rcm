@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Equipment;
+use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Http\Client\Request;
@@ -43,6 +44,35 @@ class EquipmentTest extends TestCase
             'purchase_value' => 'The purchase value field is required.',
             'unit_value' => 'The unit value field must be a number.',
             'replace_value' => 'The replace value field must be a number.',
+        ]);
+    }
+
+    public function test_create_deleted_supplier()
+    {
+        $supplier = Supplier::factory()->create(['deleted_at' => now()]);
+
+        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+            'description' => 'Tool',
+            'unit' => 'mt',
+            'supplier_id' => $supplier->id,
+            'profit_percentage' => '30',
+            'weight' => '20.5',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'min_qty' => '351',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+            'values' => [
+                [
+                    'value' => 1050,
+                    'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertJsonValidationErrors([
+            'supplier_id' => 'The selected supplier id is invalid.',
         ]);
     }
 

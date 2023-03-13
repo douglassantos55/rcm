@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Equipment;
+use App\Models\Supplier;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +27,10 @@ class EquipmentRequest extends FormRequest
         return [
             'description' => ['required'],
             'unit' => ['required', Rule::in(Equipment::UNITS)],
-            'supplier_id' => ['nullable', 'exists:App\Models\Supplier,id'],
+            'supplier_id' => [
+                'nullable',
+                Rule::exists(Supplier::class, 'id')->withoutTrashed()
+            ],
             'profit_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'weight' => ['nullable', 'numeric'],
             'in_stock' => ['required', 'integer'],
