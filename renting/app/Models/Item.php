@@ -26,6 +26,17 @@ class Item extends Model
         'equipment',
     ];
 
+
+    public static function booted(): void
+    {
+        self::saving(function (Item $item) {
+            if (!empty($item->equipment)) {
+                $item->rent_value = $item->equipment['rent_value'] * $item->qty;
+                $item->unit_value = $item->equipment['unit_value'] * $item->qty;
+            }
+        });
+    }
+
     public function rent(): BelongsTo
     {
         return $this->belongsTo(Rent::class);

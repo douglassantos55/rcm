@@ -13,11 +13,11 @@ class ItemTest extends TestCase
 
     public function test_appends_equipment()
     {
-        Http::fake(['*' => Http::response(['id' => 'aoeu'])]);
+        $equipment = ['unit_value' => '15.55', 'rent_value' => 0.3];
+        Http::fake(['*' => Http::response($equipment)]);
 
         $item = Item::factory()->create();
-
-        $this->assertEquals(['id' => 'aoeu'], $item->equipment);
+        $this->assertEquals($equipment, $item->equipment);
     }
 
     public function test_appends_equipment_not_found()
@@ -25,7 +25,6 @@ class ItemTest extends TestCase
         Http::fake(['*' => Http::response(null, 404)]);
 
         $item = Item::factory()->create();
-
         $this->assertEquals(null, $item->equipment);
     }
 
@@ -34,7 +33,6 @@ class ItemTest extends TestCase
         Http::fake(['*' => Http::response(null, 500)]);
 
         $item = Item::factory()->create();
-
         $this->assertEquals(null, $item->equipment);
     }
 }
