@@ -2,11 +2,18 @@
 
 namespace App\Http\Services;
 
+use App\Exceptions\ServiceOutOfOrderException;
+use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class PaymentService implements Service
 {
+    const NAME = 'payment';
+    const MAX_ATTEMPTS = 5;
+
     /**
      * @var PendingRequest
      */
@@ -49,7 +56,22 @@ class PaymentService implements Service
 
     private function request(string $url): ?array
     {
-        $response = $this->client->get($url);
-        return $response->successful() ? $response->json() : null;
+        try {
+            if (RateLimiter::tooManyAttempts(self::NAME, self::MAX_ATTEMPTS)) {
+                throw new ServiceOutOfOrderException();
+            }
+
+            $response = $this->client->get($url)->throwIfServerError();
+            RateLimiter::clear(self::NAME);
+
+            return $response->json();
+        } catch (HttpClientException $ex) {
+            Log::info('could not reach payment service: ' . $ex->getMessage(), ['url' => $url]);
+            RateLimiter::hit(self::NAME);
+            return null;
+        } catch (ServiceOutOfOrderException $ex) {
+            Log::info(sprintf('%s service out of order', self::NAME));
+            return null;
+        }
     }
 }
