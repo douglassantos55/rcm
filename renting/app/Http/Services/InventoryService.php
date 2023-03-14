@@ -2,20 +2,24 @@
 
 namespace App\Http\Services;
 
+use App\Exceptions\ServiceOutOfOrderException;
 use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class InventoryService implements Service
 {
+    const MAX_ATTEMPTS = 5;
+    const NAME = 'inventory';
+
     /** @var PendingRequest */
     private $client;
 
     public function __construct(string $serviceUrl)
     {
         $this->client = Http::baseUrl($serviceUrl)
-            ->throw()
             ->timeout(2)
             ->accept('application/json');
     }
@@ -23,9 +27,23 @@ class InventoryService implements Service
     public function getEquipment(string $uuid): ?array
     {
         try {
-            return $this->client->get('/api/equipment/' . $uuid)->json();
+            if (RateLimiter::tooManyAttempts(self::NAME, self::MAX_ATTEMPTS)) {
+                throw new ServiceOutOfOrderException();
+            }
+
+            $response = $this->client
+                ->get('/api/equipment/' . $uuid)
+                ->throwIfServerError()
+                ->json();
+
+            RateLimiter::clear(self::NAME);
+            return $response;
         } catch (HttpClientException $ex) {
             Log::info('could not get equipment: ' . $ex->getMessage(), ['id' => $uuid]);
+            RateLimiter::hit(self::NAME);
+            return null;
+        } catch (ServiceOutOfOrderException $ex) {
+            Log::info(sprintf('%s service out of order', self::NAME));
             return null;
         }
     }
