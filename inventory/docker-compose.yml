@@ -56,6 +56,11 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - inventory
+    consul:
+        image: 'consul'
+        networks:
+            - inventory
+
 networks:
     inventory:
         driver: bridge
