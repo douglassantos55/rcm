@@ -58,8 +58,13 @@ services:
             - inventory
     consul:
         image: 'consul'
+        ports:
+            - '8500:8500'
+        volumes:
+            - './services.json:/consul/config/services.json'
         networks:
             - inventory
+            - renting_renting
 
 networks:
     inventory:

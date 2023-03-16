@@ -1,0 +1,44 @@
+{
+    "services": [
+        {
+            "id": "inventory",
+            "name": "inventory",
+            "tags": ["v1"],
+            "address": "http://inventory",
+            "check": {
+                "name": "inventory-healthcheck",
+                "http": "http://inventory/api/health-check",
+                "interval": "5m",
+                "timeout": "1s",
+                "status": "passing"
+            }
+        },
+        {
+            "id": "renting",
+            "name": "renting",
+            "tags": ["v1"],
+            "address": "http://renting",
+            "check": {
+                "name": "renting-healthcheck",
+                "http": "http://renting/api/health-check",
+                "interval": "2s",
+                "timeout": "2s",
+                "status": "passing"
+            }
+        },
+        {
+            "id": "payment",
+            "name": "payment",
+            "tags": ["v1"],
+            "address": "http://payment",
+            "check": {
+                "name": "payment-healthcheck",
+                "http": "http://payment/payment-methods",
+                "method": "head",
+                "interval": "5m",
+                "timeout": "2s",
+                "status": "passing"
+            }
+        }
+    ]
+}
