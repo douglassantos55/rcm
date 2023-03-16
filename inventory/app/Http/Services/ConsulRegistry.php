@@ -20,7 +20,7 @@ class ConsulRegistry implements Registry
     {
         try {
             $response = $this->catalog->service($service)->json();
-            return $response['ServiceAddress'];
+            return $response[0]['ServiceAddress'];
         } catch (RuntimeException $ex) {
             Log::error('could not get service: ' . $ex->getMessage(), ['service' => $service]);
             throw $ex;
