@@ -95,6 +95,39 @@ public class PaymentTypeTests {
                         .accept(MediaType.APPLICATION_JSON)
         )
                 .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
-                .andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"deposit\",\"deletedAt\":null},{\"name\":\"credit card\",\"deletedAt\":null}]"));
+                .andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"deposit\",\"deletedAt\":null},{\"name\":\"credit card\",\"deletedAt\":null},{\"name\":\"stripe\",\"deletedAt\":null}]"));
+
+        this.client.perform(
+                MockMvcRequestBuilders.head("/payment-types")
+        ).andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    void getInvalidUUID() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-types/not-an-uuid")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    void getNonExistent() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-types/3b0787b1-e362-4791-92dc-47ab3ccb5d2e")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void get() throws Exception {
+        PaymentType type = new PaymentType();
+        type.setName("stripe");
+        this.repository.save(type);
+
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-types/" + type.getId().toString())
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("{\"name\":\"stripe\"}"));
     }
 }

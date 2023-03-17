@@ -43,7 +43,14 @@ public class PaymentTypeController {
         this.repository.save(paymentType);
     }
 
-    @GetMapping
+    @GetMapping("/{id}")
+    PaymentType get(@PathVariable UUID id) {
+        return this.repository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+    }
+
+    @RequestMapping(method = { RequestMethod.HEAD, RequestMethod.GET })
     @ResponseBody
     List<PaymentType> list() {
         return this.repository.findByDeletedAtNull();
