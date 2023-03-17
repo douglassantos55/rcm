@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SupplierController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,8 +15,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth')->get('/user', function (Request $request) {
-    return $request->user();
+Route::get('/health-check', function () {
+    return response()->json(['status' => 'healthy']);
 });
 
 Route::middleware('auth')->group(function () {
