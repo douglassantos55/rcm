@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Services\InventoryService;
 use App\Models\Period;
 use App\Models\RentingValue;
-use App\Rules\Exists;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -30,7 +28,7 @@ class RentingValueController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, InventoryService $inventory)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'values' => ['required'],
@@ -39,7 +37,7 @@ class RentingValueController extends Controller
                 'required',
                 Rule::exists(Period::class, 'id')->withoutTrashed()
             ],
-            'values.*.equipment_id' => ['required', new Exists($inventory)],
+            'values.*.equipment_id' => ['required'],
         ]);
 
         foreach ($validated['values'] as $value) {
