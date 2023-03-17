@@ -180,6 +180,36 @@ public class PaymentConditionTests {
         this.client.perform(
                 MockMvcRequestBuilders.get("/payment-conditions")
                         .accept(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"a vista\",\"title\":\"a vista\",\"increment\":0,\"paymentType\":{\"name\":\"cash\",\"deletedAt\":null},\"installments\":0,\"deletedAt\":null},{\"name\":\"Ent 30 60 90\",\"title\":\"Ent 30 60 90\",\"increment\":15,\"paymentType\":{\"name\":\"parcelado\",\"deletedAt\":null},\"installments\":4,\"deletedAt\":null},{\"name\":\"Ent 30 60\",\"title\":\"Ent 30 60\",\"increment\":10,\"paymentType\":{\"name\":\"parcelado\",\"deletedAt\":null},\"installments\":3,\"deletedAt\":null}]"));
+        ).andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"a vista\",\"title\":\"a vista\",\"increment\":0,\"paymentType\":{\"name\":\"cash\",\"deletedAt\":null},\"installments\":0,\"deletedAt\":null},{\"name\":\"Ent 30 60 90\",\"title\":\"Ent 30 60 90\",\"increment\":15,\"paymentType\":{\"name\":\"parcelado\",\"deletedAt\":null},\"installments\":4,\"deletedAt\":null},{\"name\":\"Ent 30 60\",\"title\":\"Ent 30 60\",\"increment\":10,\"paymentType\":{\"name\":\"parcelado\",\"deletedAt\":null},\"installments\":3,\"deletedAt\":null},{\"name\":\"next year\",\"title\":\"next year\"}]"));
+    }
+
+    @Test
+    void getInvalidUUID() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-conditions/not-a-valid-uuid")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    void getNonExistent() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-conditions/3b0787b1-e362-4791-92dc-47ab3ccb5d2e")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void get() throws Exception {
+        PaymentCondition condition = new PaymentCondition();
+        condition.setTitle("next year");
+        condition.setName("next year");
+        condition.setPaymentType(this.paymentTypeRepository.findByDeletedAtNull().get(0));
+        this.repository.save(condition);
+
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-conditions/" + condition.getId().toString())
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk());
     }
 }

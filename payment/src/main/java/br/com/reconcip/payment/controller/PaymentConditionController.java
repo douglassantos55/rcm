@@ -71,7 +71,14 @@ public class PaymentConditionController {
         this.repository.save(condition);
     }
 
-    @GetMapping
+    @GetMapping("/{id}")
+    PaymentCondition get(@PathVariable UUID id) {
+        return this.repository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+    }
+
+    @RequestMapping(method = { RequestMethod.HEAD, RequestMethod.GET })
     public List<PaymentCondition> list() {
         return this.repository.findByDeletedAtNull();
     }
