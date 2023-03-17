@@ -33,11 +33,11 @@ public class PaymentMethodTests {
     @Test
     void create() throws Exception {
         this.client.perform(
-                MockMvcRequestBuilders.post("/payment-methods")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"cash\"}")
-        )
+                        MockMvcRequestBuilders.post("/payment-methods")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"cash\"}")
+                )
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().json("{\"name\":\"cash\",\"deletedAt\":null}"));
 
@@ -62,11 +62,11 @@ public class PaymentMethodTests {
         this.repository.save(method);
 
         this.client.perform(
-                MockMvcRequestBuilders.put("/payment-methods/" + method.getId().toString())
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"bank deposit\"}")
-        )
+                        MockMvcRequestBuilders.put("/payment-methods/" + method.getId().toString())
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"bank deposit\"}")
+                )
                 .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
                 .andExpect(MockMvcResultMatchers.content().json("{\"id\":\"" + method.getId().toString() + "\",\"name\":\"bank deposit\"}"));
     }
@@ -139,6 +139,41 @@ public class PaymentMethodTests {
         this.client.perform(
                 MockMvcRequestBuilders.get("/payment-methods")
                         .accept(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"cash\",\"deletedAt\":null},{\"name\":\"check\",\"deletedAt\":null},{\"name\":\"bank deposit\",\"deletedAt\":null}]"));
+        ).andExpect(MockMvcResultMatchers.content().json("[{\"name\":\"cash\",\"deletedAt\":null},{\"name\":\"check\",\"deletedAt\":null},{\"name\":\"bank deposit\",\"deletedAt\":null},{\"name\":\"stripe_credit_card\",\"deletedAt\":null}]"));
+
+        this.client.perform(
+                MockMvcRequestBuilders.head("/payment-methods")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    void getInvalidUUID() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-methods/not-an-uuid")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    void getNonExistent() throws Exception {
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-methods/20440607-186a-4de6-b9db-48b311bc63fd")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void get() throws Exception{
+        PaymentMethod method = new PaymentMethod();
+        method.setName("stripe_credit_card");
+        this.repository.save(method);
+
+        this.client.perform(
+                MockMvcRequestBuilders.get("/payment-methods/" + method.getId().toString())
+                        .accept(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("{\"name\":\"stripe_credit_card\",\"deletedAt\":null}"));
     }
 }

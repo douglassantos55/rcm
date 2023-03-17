@@ -4,6 +4,7 @@ import br.com.reconcip.payment.entity.PaymentMethod;
 import br.com.reconcip.payment.repository.PaymentMethodRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,7 +44,14 @@ public class PaymentMethodController {
         this.repository.save(paymentMethod);
     }
 
-    @GetMapping
+    @GetMapping("/{id}")
+    PaymentMethod get(@PathVariable UUID id) {
+        return this.repository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+    }
+
+    @RequestMapping(method = {RequestMethod.HEAD, RequestMethod.GET})
     public List<PaymentMethod> list() {
         return this.repository.findByDeletedAtNull();
     }
