@@ -4,12 +4,16 @@ services:
   payment:
     image: 'eclipse-temurin:17-jdk-alpine'
     working_dir: '/app'
+    networks:
+      - payment
+      - renting_renting
     volumes:
       - '.:/app'
     command: ["./gradlew", "bootRun"]
     ports:
-      - '8080:8080'
+      - '8002:80'
     environment:
+      SERVER_PORT: '80'
       MYSQL_HOST: 'mysql'
       MYSQL_DATABASE: 'payment'
       MYSQL_USER: 'payment'
@@ -23,6 +27,14 @@ services:
       MYSQL_PASSWORD: 'password'
     volumes:
       - 'payment-mysql:/var/lib/mysql'
+    networks:
+      - payment
+
+networks:
+  payment:
+    driver: bridge
+  renting_renting:
+    external: true
 
 volumes:
   payment-mysql:
