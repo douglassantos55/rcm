@@ -34,7 +34,6 @@
             "check": {
                 "name": "payment-healthcheck",
                 "http": "http://payment/payment-methods",
-                "method": "head",
                 "interval": "5m",
                 "timeout": "2s",
                 "status": "passing"
