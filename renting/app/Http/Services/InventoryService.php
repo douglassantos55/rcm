@@ -33,11 +33,15 @@ class InventoryService implements Service
 
             $response = $this->client
                 ->get('/api/equipment/' . $uuid)
-                ->throwIfServerError()
-                ->json();
+                ->throwIfServerError();
 
             RateLimiter::clear(self::NAME);
-            return $response;
+
+            if ($response->clientError()) {
+                return null;
+            }
+
+            return $response->json();
         } catch (HttpClientException $ex) {
             Log::info('could not get equipment: ' . $ex->getMessage(), ['id' => $uuid]);
             RateLimiter::hit(self::NAME);

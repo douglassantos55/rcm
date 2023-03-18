@@ -64,6 +64,10 @@ class PaymentService implements Service
             $response = $this->client->get($url)->throwIfServerError();
             RateLimiter::clear(self::NAME);
 
+            if ($response->clientError()) {
+                return null;
+            }
+
             return $response->json();
         } catch (HttpClientException $ex) {
             Log::info('could not reach payment service: ' . $ex->getMessage(), ['url' => $url]);
