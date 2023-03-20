@@ -52,6 +52,7 @@ func forwardRequest(method string, url *url.URL) endpoint.Endpoint {
 
 func parseParams(ctx context.Context, r *http.Request) context.Context {
 	r.Header.Add("accept", "application/json")
+	r.URL.RawQuery = ctx.Value("query").(string)
 	for _, param := range httprouter.ParamsFromContext(ctx) {
 		r.URL.Path = strings.Replace(
 			r.URL.Path,
@@ -140,6 +141,11 @@ func main() {
 							return req, nil
 						},
 						httptransport.EncodeJSONResponse,
+						httptransport.ServerBefore(
+							func(ctx context.Context, r *http.Request) context.Context {
+								return context.WithValue(ctx, "query", r.URL.RawQuery)
+							},
+						),
 					),
 				)
 			}
