@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
+const QUERY_CONTEXT_KEY = "query"
+
 type Map struct {
 	Method   string
 	Path     string
@@ -42,17 +44,28 @@ func forwardRequest(method string, url *url.URL) endpoint.Endpoint {
 		method,
 		url,
 		httptransport.EncodeJSONRequest,
-		func(ctx context.Context, r *http.Response) (response any, err error) {
-			err = json.NewDecoder(r.Body).Decode(&response)
-			return response, err
-		},
-		httptransport.ClientBefore(parseParams),
+		decodeJSONResponse,
+		httptransport.ClientBefore(
+			setRouteParams,
+			appendQueryString,
+			setAcceptHeader("application/json"),
+		),
 	).Endpoint()
 }
 
-func parseParams(ctx context.Context, r *http.Request) context.Context {
-	r.Header.Add("accept", "application/json")
-	r.URL.RawQuery = ctx.Value("query").(string)
+func setAcceptHeader(mediaType string) httptransport.RequestFunc {
+	return func(ctx context.Context, r *http.Request) context.Context {
+		r.Header.Add("Accept", mediaType)
+		return ctx
+	}
+}
+
+func appendQueryString(ctx context.Context, r *http.Request) context.Context {
+	r.URL.RawQuery = ctx.Value(QUERY_CONTEXT_KEY).(string)
+	return ctx
+}
+
+func setRouteParams(ctx context.Context, r *http.Request) context.Context {
 	for _, param := range httprouter.ParamsFromContext(ctx) {
 		r.URL.Path = strings.Replace(
 			r.URL.Path,
@@ -93,6 +106,20 @@ func forward(instancer sd.Instancer, path, target string, logger log.Logger) []M
 			Endpoint: sd.NewEndpointer(instancer, forwardFactory(http.MethodDelete, target+"/{id}"), logger, options),
 		},
 	}
+}
+
+func queryToContext(ctx context.Context, r *http.Request) context.Context {
+	return context.WithValue(ctx, QUERY_CONTEXT_KEY, r.URL.RawQuery)
+}
+
+func decodeJSONRequest(ctx context.Context, r *http.Request) (req any, err error) {
+	err = json.NewDecoder(r.Body).Decode(&req)
+	return req, nil
+}
+
+func decodeJSONResponse(ctx context.Context, r *http.Response) (res any, err error) {
+	err = json.NewDecoder(r.Body).Decode(&res)
+	return res, err
 }
 
 func main() {
@@ -136,15 +163,10 @@ func main() {
 					endpointer.Path,
 					httptransport.NewServer(
 						endpoint,
-						func(ctx context.Context, r *http.Request) (req any, err error) {
-							err = json.NewDecoder(r.Body).Decode(&req)
-							return req, nil
-						},
+						decodeJSONRequest,
 						httptransport.EncodeJSONResponse,
 						httptransport.ServerBefore(
-							func(ctx context.Context, r *http.Request) context.Context {
-								return context.WithValue(ctx, "query", r.URL.RawQuery)
-							},
+							queryToContext,      // grab query string
 						),
 					),
 				)
