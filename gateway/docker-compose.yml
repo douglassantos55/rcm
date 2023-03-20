@@ -1,0 +1,18 @@
+version: '3'
+services:
+  gateway:
+    image: 'golang'
+    working_dir: '/app'
+    command: ["go", "run", "cmd/main.go"]
+    ports:
+      - '8000:8000'
+    environment:
+      CONSUL_ADDR: 'consul:8500'
+    volumes:
+      - '.:/app'
+    networks:
+      - renting_renting
+
+networks:
+  renting_renting:
+    external: true

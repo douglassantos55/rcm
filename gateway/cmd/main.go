@@ -29,7 +29,7 @@ type Map struct {
 
 func forwardFactory(method, path string) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-		url, err := url.Parse(instance + path)
+		url, err := url.Parse(strings.TrimSuffix(instance, ":0") + path)
 		if err != nil {
 			return nil, nil, err
 		}
