@@ -11,9 +11,11 @@ import (
 	"strings"
 	"time"
 
+	jwtauth "github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/consul"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/julienschmidt/httprouter"
 
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -21,12 +23,40 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-const QUERY_CONTEXT_KEY = "query"
+const (
+	QUERY_CONTEXT_KEY    = "query"
+	JWT_TOKEN_SECRET_KEY = "JWT_SECRET"
+)
 
 type Map struct {
 	Method   string
 	Path     string
 	Endpoint sd.Endpointer
+}
+
+type TokenClaims struct {
+	jwt.StandardClaims
+}
+
+func TokenClaimsFactory() jwt.Claims {
+	return &TokenClaims{}
+}
+
+func (t *TokenClaims) Valid() error {
+	vErr := new(jwt.ValidationError)
+	if err := t.StandardClaims.Valid(); err != nil {
+		return err
+	}
+	if !t.VerifyAudience("reconcip", true) {
+		vErr.Errors |= jwt.ValidationErrorAudience
+	}
+	if !t.VerifyIssuer("auth_service", true) {
+		vErr.Errors |= jwt.ValidationErrorIssuer
+	}
+	if vErr.Errors == 0 {
+		return nil
+	}
+	return vErr
 }
 
 func forwardFactory(method, path string) sd.Factory {
@@ -48,6 +78,7 @@ func forwardRequest(method string, url *url.URL) endpoint.Endpoint {
 		httptransport.ClientBefore(
 			setRouteParams,
 			appendQueryString,
+			jwtauth.ContextToHTTP(),
 			setAcceptHeader("application/json"),
 		),
 	).Endpoint()
@@ -151,6 +182,14 @@ func main() {
 	}
 
 	router := httprouter.New()
+
+	jwtValidator := jwtauth.NewParser(func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv(JWT_TOKEN_SECRET_KEY)), nil
+	}, jwt.SigningMethodHS256, TokenClaimsFactory)
+
 	for _, mapper := range endpointers {
 		for _, endpointer := range mapper {
 			endpoints, err := endpointer.Endpoint.Endpoints()
@@ -162,11 +201,12 @@ func main() {
 					endpointer.Method,
 					endpointer.Path,
 					httptransport.NewServer(
-						endpoint,
+						jwtValidator(endpoint),
 						decodeJSONRequest,
 						httptransport.EncodeJSONResponse,
 						httptransport.ServerBefore(
-							queryToContext,      // grab query string
+							queryToContext,          // grab query string
+							jwtauth.HTTPToContext(), // grab auth token
 						),
 					),
 				)
