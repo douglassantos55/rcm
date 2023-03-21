@@ -5,6 +5,7 @@
             "name": "inventory",
             "tags": ["v1"],
             "address": "http://inventory",
+            "port": 80,
             "check": {
                 "name": "inventory-healthcheck",
                 "http": "http://inventory/api/health-check",
@@ -16,6 +17,7 @@
         {
             "id": "renting",
             "name": "renting",
+            "port": 80,
             "tags": ["v1"],
             "address": "http://renting",
             "check": {
@@ -29,6 +31,7 @@
         {
             "id": "payment",
             "name": "payment",
+            "port": 80,
             "tags": ["v1"],
             "address": "http://payment",
             "check": {
