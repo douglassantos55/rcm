@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Services\Registry;
 use App\Models\Equipment;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,11 +11,21 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class EquipmentTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->partialMock(Registry::class, function (MockInterface $mock) {
+            $mock->shouldReceive('get')->andReturn('renting');
+        });
+    }
 
     public function test_validation()
     {
@@ -268,7 +279,9 @@ class EquipmentTest extends TestCase
             }
 
             return $request->url() === 'renting/api/renting-values'
-                && $request->method() === 'POST' && $response->successful();
+                && $request->hasHeader('Authorization')
+                && $request->method() === 'POST'
+                && $response->successful();
         });
     }
 
@@ -302,7 +315,9 @@ class EquipmentTest extends TestCase
 
         Http::assertSent(function (Request $request, Response $response) {
             return $request->url() === 'renting/api/renting-values'
-                && $request->method() === 'POST' && $response->serverError();
+                && $request->hasHeader('Authorization')
+                && $request->method() === 'POST'
+                && $response->serverError();
         });
 
         $response->assertServerError();
@@ -349,7 +364,9 @@ class EquipmentTest extends TestCase
 
         Http::assertSent(function (Request $request, Response $response) {
             return $request->url() === 'renting/api/renting-values'
-                && $request->method() === 'POST' && $response->clientError();
+                && $request->hasHeader('Authorization')
+                && $request->method() === 'POST'
+                && $response->clientError();
         });
 
         $this->assertNull(Equipment::where('description', 'Ugabuga')->first());
@@ -403,7 +420,9 @@ class EquipmentTest extends TestCase
 
         Http::assertSent(function (Request $request, Response $response) {
             return $request->url() === 'renting/api/renting-values'
-                && $request->method() === 'PUT' && $response->clientError();
+                && $request->hasHeader('Authorization')
+                && $request->method() === 'PUT'
+                && $response->clientError();
         });
 
         $this->assertNotEquals('Ugabuga', $equipment->refresh()->description);
@@ -449,7 +468,9 @@ class EquipmentTest extends TestCase
 
         Http::assertSent(function (Request $request, Response $response) {
             return $request->url() === 'renting/api/renting-values'
-                && $request->method() === 'PUT' && $response->serverError();
+                && $request->hasHeader('Authorization')
+                && $request->method() === 'PUT'
+                && $response->serverError();
         });
 
         $response->assertServerError();
@@ -497,7 +518,9 @@ class EquipmentTest extends TestCase
             }
 
             return $request->url() === 'renting/api/renting-values'
-                && $request->method() === 'PUT' && $response->successful();
+                && $request->hasHeader('Authorization')
+                && $request->method() === 'PUT'
+                && $response->successful();
         });
     }
 

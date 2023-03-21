@@ -19,7 +19,7 @@ class RentingService
     public function __construct(string $serviceUrl)
     {
         $this->client = Http::baseUrl($serviceUrl)
-            ->withHeaders(['accept' => 'application/json']);
+            ->accept('application/json');
     }
 
     public function createRentingValues(array $values): Response
@@ -31,6 +31,7 @@ class RentingService
         try {
             $response = $this->client
                 ->timeout(2)
+                ->withToken(request()->bearerToken())
                 ->post('/api/renting-values', ['values' => $values])
                 ->throwIfServerError();
 
@@ -53,6 +54,7 @@ class RentingService
         try {
             $response = $this->client
                 ->timeout(2)
+                ->withToken(request()->bearerToken())
                 ->put('/api/renting-values', ['values' => $values])
                 ->throwIfServerError();
 
