@@ -2,17 +2,29 @@
 
 namespace Tests\Feature;
 
+use App\Http\Services\Registry;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Period;
 use App\Models\Rent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class RentTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->partialMock(Registry::class, function (MockInterface $mock) {
+            $mock->shouldReceive('get')->with('inventory')->andReturn('inventory');
+            $mock->shouldReceive('get')->with('payment')->andReturn('payment');
+        });
+    }
 
     public function test_create_validation()
     {

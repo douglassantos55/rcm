@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Http\Services\InventoryService;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -94,5 +95,17 @@ class InventoryServiceTest extends TestCase
 
         $service->getEquipment($uuid);
         $this->assertEquals(5, RateLimiter::remaining($service::NAME, $service::MAX_ATTEMPTS));
+    }
+
+    public function test_forwards_jwt_token()
+    {
+        Http::fake(['*' => Http::response()]);
+
+        $service = new InventoryService('inventory');
+        $service->getEquipment('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
+
+        Http::assertSent(function (Request $request) {
+            return $request->hasHeader('Authorization');
+        });
     }
 }

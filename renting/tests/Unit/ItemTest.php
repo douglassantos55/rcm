@@ -2,14 +2,25 @@
 
 namespace Tests\Unit;
 
+use App\Http\Services\Registry;
 use App\Models\Item;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class ItemTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->partialMock(Registry::class, function (MockInterface $mock) {
+            $mock->shouldReceive('get')->andReturn('inventory');
+        });
+    }
 
     public function test_appends_equipment()
     {

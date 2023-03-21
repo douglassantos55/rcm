@@ -61,7 +61,11 @@ class PaymentService implements Service
                 throw new ServiceOutOfOrderException();
             }
 
-            $response = $this->client->get($url)->throwIfServerError();
+            $response = $this->client
+                ->withToken(request()->bearerToken())
+                ->get($url)
+                ->throwIfServerError();
+
             RateLimiter::clear(self::NAME);
 
             if ($response->clientError()) {

@@ -32,6 +32,7 @@ class InventoryService implements Service
             }
 
             $response = $this->client
+                ->withToken(request()->bearerToken())
                 ->get('/api/equipment/' . $uuid)
                 ->throwIfServerError();
 

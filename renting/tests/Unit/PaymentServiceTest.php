@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Http\Services\PaymentService;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -84,5 +85,41 @@ class PaymentServiceTest extends TestCase
 
         $this->assertNotNull($service->getPaymentType($uuid));
         $this->assertEquals(5, RateLimiter::remaining($service::NAME, $service::MAX_ATTEMPTS));
+    }
+
+    public function test_forwards_jwt_token_payment_type()
+    {
+        Http::fake(['*' => Http::response()]);
+
+        $service = new PaymentService('payment');
+        $service->getPaymentType('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
+
+        Http::assertSent(function (Request $request) {
+            return $request->hasHeader('Authorization');
+        });
+    }
+
+    public function test_forwards_jwt_token_payment_method()
+    {
+        Http::fake(['*' => Http::response()]);
+
+        $service = new PaymentService('payment');
+        $service->getPaymentMethod('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
+
+        Http::assertSent(function (Request $request) {
+            return $request->hasHeader('Authorization');
+        });
+    }
+
+    public function test_forwards_jwt_token_payment_condition()
+    {
+        Http::fake(['*' => Http::response()]);
+
+        $service = new PaymentService('payment');
+        $service->getPaymentCondition('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
+
+        Http::assertSent(function (Request $request) {
+            return $request->hasHeader('Authorization');
+        });
     }
 }
