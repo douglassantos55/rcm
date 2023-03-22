@@ -4,7 +4,6 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\RentController;
 use App\Http\Controllers\RentingValueController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,22 +17,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/health-check', function() {
+Route::get('/health-check', function () {
     return response('');
 });
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth')->group(function () {
+    Route::apiResources([
+        '/periods' => PeriodController::class,
+        '/customers' => CustomerController::class,
+        '/rents' => RentController::class,
+    ]);
 
-Route::apiResources([
-    '/periods' => PeriodController::class,
-    '/customers' => CustomerController::class,
-    '/rents' => RentController::class,
-]);
-
-Route::controller(RentingValueController::class)->group(function () {
-    Route::get('/renting-values', 'index')->name('renting-values.index');
-    Route::post('/renting-values', 'store')->name('renting-values.store');
-    Route::put('/renting-values', 'update')->name('renting-values.update');
+    Route::controller(RentingValueController::class)->group(function () {
+        Route::get('/renting-values', 'index')->name('renting-values.index');
+        Route::post('/renting-values', 'store')->name('renting-values.store');
+        Route::put('/renting-values', 'update')->name('renting-values.update');
+    });
 });
