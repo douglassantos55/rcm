@@ -29,7 +29,7 @@ class CustomersTest extends TestCase
         ]);
     }
 
-    public function test_duplicated_email()
+    public function test_create_duplicated_email()
     {
         Customer::factory()->create(['email' => 'john@email.com']);
 
@@ -81,6 +81,18 @@ class CustomersTest extends TestCase
 
         $response->assertCreated();
         $this->assertModelExists(Customer::where('name', 'Joaquim')->first());
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_create_invalid_token(string $token)
+    {
+        $response = $this->withToken($token)->post(route('customers.store'), [
+            'name' => 'Joaquim',
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
     }
 
     public function test_update_validation()
@@ -220,6 +232,21 @@ class CustomersTest extends TestCase
         $this->assertEquals('297.164.260-70', $customer->cpf_cnpj);
     }
 
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_update_invalid_token(string $token)
+    {
+        $customer = Customer::factory()->create(['cpf_cnpj' => '20643221000195']);
+
+        $response = $this->withToken($token)->put(route('customers.update', $customer->id), [
+            'name' => 'Jon',
+            'cpf_cnpj' => '297.164.260-70',
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
     public function test_delete_non_existent()
     {
         $uuid = '1b443f68-4fad-4d01-aacf-6c455ba2bbf4';
@@ -261,6 +288,21 @@ class CustomersTest extends TestCase
 
         $response->assertNoContent();
         $this->assertSoftDeleted($customer);
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_delete_invalid_token(string $token)
+    {
+        $customer = Customer::factory()->create();
+
+        $response = $this->withToken($token)
+            ->delete(route('customers.destroy', $customer->id), [], [
+                'accept' => 'application/json',
+            ]);
+
+        $response->assertUnauthorized();
     }
 
     public function test_show_non_existent()
@@ -305,6 +347,20 @@ class CustomersTest extends TestCase
         $response->assertExactJson($customer->refresh()->toArray());
     }
 
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_show_invalid_token(string $token)
+    {
+        $customer = Customer::factory()->create();
+
+        $response = $this->withToken($token)->get(route('customers.show', $customer->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
     public function test_list_paginates()
     {
         Customer::factory()->count(500)->create();
@@ -314,5 +370,19 @@ class CustomersTest extends TestCase
         ]);
 
         $response->assertJsonCount(50, 'data');
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_list_invalid_token(string $token)
+    {
+        Customer::factory()->count(500)->create();
+
+        $response = $this->withToken($token)->get(route('customers.index'), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertUnauthorized();
     }
 }

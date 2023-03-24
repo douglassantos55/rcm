@@ -183,6 +183,32 @@ class RentTest extends TestCase
         $this->assertCount(2, Item::all());
     }
 
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_create_invalid_token(string $token)
+    {
+        $period = Period::factory()->create();
+        $customer = Customer::factory()->create();
+
+        $response = $this->withToken($token)->post(route('rents.store'), [
+            'start_date' => '2020-10-10 22:52:30',
+            'end_date' => '2020-10-20 22:52:30',
+            'qty_days' => '10',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => '5', 'equipment_id' => '73686c69-2307-48bb-bb5f-c4acbb71aa58'],
+                ['qty' => '5', 'equipment_id' => '3ac65dee-367e-48ec-8486-08d6e729cca4'],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
     public function test_update_validation()
     {
         Http::fake([
@@ -464,6 +490,32 @@ class RentTest extends TestCase
         $this->assertEquals($customer->id, $rent->customer_id);
     }
 
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_update_invalid_token(string $token)
+    {
+        $rent = Rent::factory()->create();
+        $period = Period::factory()->create();
+        $customer = Customer::factory()->create();
+
+        $response = $this->withToken($token)->put(route('rents.update', $rent->id), [
+            'start_date' => '2020-10-10',
+            'end_date' => '2020-10-20',
+            'qty_days' => '10',
+            'customer_id' => $customer->id,
+            'period_id' => $period->id,
+            'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
+            'items' => [
+                ['qty' => 2, 'equipment_id' => '3272'],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
     public function test_show_soft_deleted_rent()
     {
         $rent = Rent::factory()->create(['deleted_at' => now()]);
@@ -498,11 +550,25 @@ class RentTest extends TestCase
         $response->assertJson($rent->refresh()->toArray());
     }
 
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_show_rent_invalid_token(string $token)
+    {
+        $rent = Rent::factory()->create();
+
+        $response = $this->withToken($token)->get(route('rents.show', $rent->id), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
     public function test_delete_non_existent()
     {
         $uuid = '62578f05-85f2-442b-8412-df47d188e01b';
 
-        $response = $this->delete(route('rents.destroy', $uuid), [
+        $response = $this->delete(route('rents.destroy', $uuid), [], [
             'accept' => 'application/json',
         ]);
 
@@ -513,7 +579,7 @@ class RentTest extends TestCase
     {
         $rent = Rent::factory()->create(['deleted_at' => now()]);
 
-        $response = $this->delete(route('rents.destroy', $rent->id), [
+        $response = $this->delete(route('rents.destroy', $rent->id), [], [
             'accept' => 'application/json',
         ]);
 
@@ -524,12 +590,26 @@ class RentTest extends TestCase
     {
         $rent = Rent::factory()->create();
 
-        $response = $this->delete(route('rents.destroy', $rent->id), [
+        $response = $this->delete(route('rents.destroy', $rent->id), [], [
             'accept' => 'application/json',
         ]);
 
         $response->assertNoContent();
         $this->assertSoftDeleted($rent);
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_delete_invalid_token(string $token)
+    {
+        $rent = Rent::factory()->create();
+
+        $response = $this->withToken($token)->delete(route('rents.destroy', $rent->id), [], [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertUnauthorized();
     }
 
     public function test_list_ignores_deleted()
@@ -578,5 +658,19 @@ class RentTest extends TestCase
         ]);
 
         $response->assertJsonCount(1, 'data');
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_list_invalid_token(string $token)
+    {
+        Rent::factory()->count(100)->create();
+
+        $response = $this->withToken($token)->get(route('rents.index'), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertUnauthorized();
     }
 }

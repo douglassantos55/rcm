@@ -105,6 +105,54 @@ class RentingValueTest extends TestCase
         ]);
     }
 
+    public function test_create()
+    {
+        $period = Period::factory()->create();
+
+        $response = $this->post(route('renting-values.store'), [
+            'values' => [
+                [
+                    'value' => '230.00',
+                    'period_id' => $period->id,
+                    'equipment_id' => '8dde394d-bd3e-4a4e-8483-4ff3bd8e8f49',
+                ],
+                [
+                    'value' => 30.00,
+                    'period_id' => $period->id,
+                    'equipment_id' => '11107582-2f38-4d12-a347-9b435b51686e',
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertCreated();
+        $this->assertCount(2, RentingValue::all());
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_create_invalid_token(string $token)
+    {
+        $period = Period::factory()->create();
+
+        $response = $this->withToken($token)->post(route('renting-values.store'), [
+            'values' => [
+                [
+                    'value' => '230.00',
+                    'period_id' => $period->id,
+                    'equipment_id' => '8dde394d-bd3e-4a4e-8483-4ff3bd8e8f49',
+                ],
+                [
+                    'value' => 30.00,
+                    'period_id' => $period->id,
+                    'equipment_id' => '11107582-2f38-4d12-a347-9b435b51686e',
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
     public function test_list_by_equipment()
     {
         $periods = Period::factory()->createMany([
@@ -167,6 +215,22 @@ class RentingValueTest extends TestCase
 
         $response->assertBadRequest();
         $response->assertContent('equipment_id required');
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_list_invalid_token(string $token)
+    {
+        RentingValue::factory()->count(30)->create();
+
+        $response = $this->withToken($token)->get(route('renting-values.index', [
+            'equipment_id' => 'test'
+        ]), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertUnauthorized();
     }
 
     public function test_update_validation()
@@ -246,5 +310,34 @@ class RentingValueTest extends TestCase
 
         $this->assertEquals(2, $values[0]->refresh()->value);
         $this->assertEquals(3, $values[1]->refresh()->value);
+    }
+
+    /**
+     * @dataProvider invalidTokensProvider
+     */
+    public function test_update_invalid_token(string $token)
+    {
+        $daily  = Period::factory()->create(['name' => 'Daily', 'qty_days' => 1]);
+        $weekly  = Period::factory()->create(['name' => 'Weekly', 'qty_days' => 7]);
+
+        $values = RentingValue::factory()->createMany([
+            ['value' => 0.75, 'period_id' => $daily->id, 'equipment_id' => 'first'],
+            ['value' => 0.85, 'period_id' => $weekly->id, 'equipment_id' => 'first'],
+        ]);
+
+        $response = $this->withToken($token)->put(route('renting-values.update'), [
+            'values' => [
+                [
+                    'value' => '2.00',
+                    'id' => $values[0]->id,
+                ],
+                [
+                    'value' => 3.00,
+                    'id' => $values[1]->id,
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertUnauthorized();
     }
 }
