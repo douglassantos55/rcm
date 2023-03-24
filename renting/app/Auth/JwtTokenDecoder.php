@@ -2,6 +2,8 @@
 
 namespace App\Auth;
 
+use App\Auth\Constraint\Constraint;
+use App\Auth\Exception\InvalidAlgorithmException;
 use Lcobucci\JWT\Encoding\CannotDecodeContent;
 use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer;
@@ -13,11 +15,8 @@ use Lcobucci\JWT\Token\InvalidTokenStructure;
 use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\Token\UnsupportedHeaderFound;
 use Lcobucci\JWT\UnencryptedToken;
-use Lcobucci\JWT\Validation\Constraint\IssuedBy;
-use Lcobucci\JWT\Validation\Constraint\PermittedFor;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Validator;
-use Lcobucci\JWT\Validator as JWTValidator;
 
 class JwtTokenDecoder implements JwtDecoder
 {
@@ -27,7 +26,7 @@ class JwtTokenDecoder implements JwtDecoder
     private $parser;
 
     /**
-     * @var JWTValidator
+     * @var Validator
      */
     private $validator;
 
@@ -37,38 +36,45 @@ class JwtTokenDecoder implements JwtDecoder
         $this->parser = new Parser(new JoseEncoder());
     }
 
-    public function decode(string $encoded, string $algo, string $secret): ?JwtToken
+    public function decode(string $encoded, string $algo, string $secret, Constraint ...$constraints): ?JwtToken
     {
         try {
             /** @var UnencryptedToken */
             $token = $this->parser->parse($encoded);
-
-            $issuer = new IssuedBy('auth_service');
-            $audience = new PermittedFor('reconcip');
             $sign = new SignedWith($this->getAlgorithm($algo), InMemory::plainText($secret));
 
-            if (!$this->validator->validate($token, $issuer, $audience, $sign)) {
+            if (!$this->validator->validate($token, $sign)) {
                 return null;
             }
 
-            return new JwtTokenImpl($token);
+            $token = new JwtTokenImpl($token);
+            if (!$token->validate(...$constraints)) {
+                return null;
+            }
+
+            return $token;
         } catch (CannotDecodeContent | InvalidTokenStructure | UnsupportedHeaderFound $e) {
             logger($e->getMessage(), ['encoded' => $encoded]);
             return null;
         }
     }
 
-    private function getAlgorithm(string $algorithm): Signer
+    /**
+     * Gets the algorithm signer
+     *
+     * @param string $algo
+     *
+     * @return Signer
+     *
+     * @throws InvalidAlgorithmException
+     */
+    private function getAlgorithm(string $algo): Signer
     {
-        switch ($algorithm) {
-            case 'HS256':
-                return new Sha256();
-            case 'HS384':
-                return new Sha384();
-            case 'HS512':
-                return new Sha512();
-            default:
-                throw new InvalidAlgorithmException();
-        }
+        return match ($algo) {
+            'HS256' => new Sha256(),
+            'HS384' => new Sha384(),
+            'HS512' => new Sha512(),
+            default => throw new InvalidAlgorithmException()
+        };
     }
 }
