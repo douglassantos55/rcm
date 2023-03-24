@@ -2,6 +2,8 @@
 
 namespace App\Auth;
 
+use App\Auth\Constraint\Constraint;
+
 interface JwtToken
 {
     /**
@@ -24,4 +26,14 @@ interface JwtToken
      * @return string
      */
     public function getSignature(): string;
+
+    /**
+     * Validates token for given constraints
+     *
+     * @param Constraint $constraints
+     *
+     * @return bool
+     */
+    public function validate(Constraint ...$constraints): bool;
 }
+

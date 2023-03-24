@@ -2,6 +2,8 @@
 
 namespace App\Auth;
 
+use App\Auth\Constraint\IntendedForConstraint;
+use App\Auth\Constraint\IssuedByConstraint;
 use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
@@ -43,14 +45,20 @@ class JwtGuard implements Guard
 
     public function user()
     {
-        $header = $this->request->header('authorization');
+        $header = $this->request->header('Authorization');
 
         if (is_null($header)) {
             return null;
         }
 
-        $token = str_ireplace('bearer ', '', $header);
-        $token = $this->decoder->decode($token, 'HS256', env('JWT_SECRET'));
+        $tokenStr = str_ireplace('Bearer ', '', $header);
+
+        $constraints = [
+            new IssuedByConstraint(config('auth.jwt.issuer')),
+            new IntendedForConstraint(config('auth.jwt.audience')),
+        ];
+
+        $token = $this->decoder->decode($tokenStr, 'HS256', config('auth.jwt.secret'), ...$constraints);
 
         if (is_null($token)) {
             return null;
