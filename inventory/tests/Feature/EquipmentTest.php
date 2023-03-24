@@ -29,7 +29,7 @@ class EquipmentTest extends TestCase
 
     public function test_validation()
     {
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => '  ',
             'unit' => 'kg',
             'supplier_id' => 'b396a772-242c-4974-9493-6418fa843fd1',
@@ -62,7 +62,7 @@ class EquipmentTest extends TestCase
     {
         $supplier = Supplier::factory()->create(['deleted_at' => now()]);
 
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => 'Tool',
             'unit' => 'mt',
             'supplier_id' => $supplier->id,
@@ -91,7 +91,7 @@ class EquipmentTest extends TestCase
     {
         Http::fake();
 
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => 'Tool',
             'unit' => 'mt',
             'supplier_id' => null,
@@ -113,7 +113,7 @@ class EquipmentTest extends TestCase
     {
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->withToken($this->validToken)->get(route('equipment.show', $equipment->id), [
+        $response = $this->get(route('equipment.show', $equipment->id), [
             'accept' => 'application/json'
         ]);
 
@@ -123,7 +123,7 @@ class EquipmentTest extends TestCase
     public function test_show_not_found()
     {
         $uuid = '1b443f68-4fad-4d01-aacf-6c455ba2bbf4';
-        $response = $this->withToken($this->validToken)->get(route('equipment.show', $uuid));
+        $response = $this->get(route('equipment.show', $uuid));
 
         $response->assertNotFound();
     }
@@ -135,7 +135,7 @@ class EquipmentTest extends TestCase
             'deleted_at' => now(),
         ]);
 
-        $response = $this->withToken($this->validToken)->get(route('equipment.show', $equipment->id), [
+        $response = $this->get(route('equipment.show', $equipment->id), [
             'accept' => 'application/json'
         ]);
 
@@ -148,7 +148,7 @@ class EquipmentTest extends TestCase
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->withToken($this->validToken)->put(route('equipment.update', $equipment->id), [
+        $response = $this->put(route('equipment.update', $equipment->id), [
             'description' => 'Updated',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -167,7 +167,7 @@ class EquipmentTest extends TestCase
     {
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->withToken($this->validToken)->put(route('equipment.update', $equipment->id), [
+        $response = $this->put(route('equipment.update', $equipment->id), [
             'description' => '  ',
             'unit' => 'kg',
             'supplier_id' => 'b396a772-242c-4974-9493-6418fa843fd1',
@@ -199,7 +199,10 @@ class EquipmentTest extends TestCase
     public function test_soft_delete()
     {
         $equipment = Equipment::factory()->create(['description' => 'Test']);
-        $response = $this->withToken($this->validToken)->delete(route('equipment.destroy', $equipment->id));
+
+        $response = $this->delete(route('equipment.destroy', $equipment->id), [], [
+            'accept' => 'application/json',
+        ]);
 
         $response->assertStatus(204);
         $this->assertSoftDeleted($equipment);
@@ -208,7 +211,11 @@ class EquipmentTest extends TestCase
     public function test_delete_not_found()
     {
         $uuid = '0ddb504a-b2b8-4047-86de-0d8862007ccd';
-        $response = $this->withToken($this->validToken)->delete(route('equipment.destroy', $uuid));
+
+        $response = $this->delete(route('equipment.destroy', $uuid), [], [
+            'accept' => 'application/json',
+        ]);
+
         $response->assertNotFound();
     }
 
@@ -219,7 +226,10 @@ class EquipmentTest extends TestCase
             'deleted_at' => now(),
         ]);
 
-        $response = $this->withToken($this->validToken)->delete(route('equipment.destroy', $equipment->id));
+        $response = $this->delete(route('equipment.destroy', $equipment->id), [], [
+            'accept' => 'application/json',
+        ]);
+
         $response->assertNotFound();
     }
 
@@ -228,7 +238,7 @@ class EquipmentTest extends TestCase
         Equipment::factory()->count(10)->create();
         Equipment::factory()->count(10)->create(['deleted_at' => now()]);
 
-        $response = $this->withToken($this->validToken)->get(route('equipment.index'), [
+        $response = $this->get(route('equipment.index'), [
             'accept' => 'application/json',
         ]);
 
@@ -239,7 +249,7 @@ class EquipmentTest extends TestCase
     {
         Http::fake(['renting/api/renting-values' => Http::response()]);
 
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => 'With renting values',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -289,7 +299,7 @@ class EquipmentTest extends TestCase
     {
         Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
 
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => 'Ugabuga',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -338,7 +348,7 @@ class EquipmentTest extends TestCase
             ], 422),
         ]);
 
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => 'Ugabuga',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -394,7 +404,7 @@ class EquipmentTest extends TestCase
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->withToken($this->validToken)->put(route('equipment.update', $equipment->id), [
+        $response = $this->put(route('equipment.update', $equipment->id), [
             'description' => 'Ugabuga',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -440,31 +450,29 @@ class EquipmentTest extends TestCase
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this
-            ->withToken($this->validToken)
-            ->put(route('equipment.update', $equipment->id), [
-                'description' => 'Ugabuga',
-                'unit' => 'mt',
-                'in_stock' => '203',
-                'effective_qty' => '223',
-                'purchase_value' => '350.75',
-                'unit_value' => '3.33',
-                'replace_value' => '550.75',
-                'values' => [
-                    [
-                        'value' => '30,00',
-                        'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
-                    ],
-                    [
-                        'value' => 'text',
-                        'id' => '3f63408c-3732-417e-8275-d759e584b84b',
-                    ],
-                    [
-                        'value' => 12.50,
-                        'id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
-                    ],
+        $response = $this->put(route('equipment.update', $equipment->id), [
+            'description' => 'Ugabuga',
+            'unit' => 'mt',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+            'values' => [
+                [
+                    'value' => '30,00',
+                    'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
                 ],
-            ], ['accept' => 'application/json']);
+                [
+                    'value' => 'text',
+                    'id' => '3f63408c-3732-417e-8275-d759e584b84b',
+                ],
+                [
+                    'value' => 12.50,
+                    'id' => '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e',
+                ],
+            ],
+        ], ['accept' => 'application/json']);
 
         Http::assertSent(function (Request $request, Response $response) {
             return $request->url() === 'renting/api/renting-values'
@@ -483,7 +491,7 @@ class EquipmentTest extends TestCase
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $this->withToken($this->validToken)->put(route('equipment.update', $equipment->id), [
+        $this->put(route('equipment.update', $equipment->id), [
             'description' => 'Updated',
             'unit' => 'mt',
             'in_stock' => '203',
@@ -530,7 +538,7 @@ class EquipmentTest extends TestCase
             throw new HttpClientException('could not resolve host');
         }]);
 
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => 'Exception',
             'unit' => 'mt',
             'supplier_id' => null,
@@ -563,7 +571,7 @@ class EquipmentTest extends TestCase
         Http::fake(['renting/api/renting-values' => Http::response()]);
 
         $doRequest = function () {
-            return $this->withToken($this->validToken)->post(route('equipment.store'), [
+            return $this->post(route('equipment.store'), [
                 'description' => 'Max attempts',
                 'unit' => 'mt',
                 'supplier_id' => null,
@@ -600,7 +608,7 @@ class EquipmentTest extends TestCase
         Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
 
         $doRequest = function () {
-            return $this->withToken($this->validToken)->post(route('equipment.store'), [
+            return $this->post(route('equipment.store'), [
                 'description' => 'Max attempts',
                 'unit' => 'mt',
                 'supplier_id' => null,
@@ -641,7 +649,7 @@ class EquipmentTest extends TestCase
 
         Http::fake(['renting/api/renting-values' => Http::response()]);
 
-        $response = $this->withToken($this->validToken)->post(route('equipment.store'), [
+        $response = $this->post(route('equipment.store'), [
             'description' => 'Max attempts',
             'unit' => 'mt',
             'supplier_id' => null,
@@ -675,8 +683,36 @@ class EquipmentTest extends TestCase
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->withToken($this->validToken)
-            ->put(route('equipment.update', $equipment->id), [
+        $response = $this->put(route('equipment.update', $equipment->id), [
+            'description' => 'Updated',
+            'unit' => 'mt',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+            'values' => [
+                [
+                    'value' => '30.00',
+                    'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                    'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                ],
+            ],
+        ], ['accept' => 'application/json']);
+
+        $response->assertServerError();
+        $response->assertContent('could not reach renting service');
+
+        Http::assertNothingSent();
+        $this->assertEquals('Test', $equipment->refresh()->description);
+    }
+
+    public function test_update_values_multiple_times()
+    {
+        Http::fake(['renting/api/renting-values' => Http::response()]);
+
+        $doRequest = function (Equipment $equipment) {
+            return $this->put(route('equipment.update', $equipment->id), [
                 'description' => 'Updated',
                 'unit' => 'mt',
                 'in_stock' => '203',
@@ -692,36 +728,6 @@ class EquipmentTest extends TestCase
                     ],
                 ],
             ], ['accept' => 'application/json']);
-
-        $response->assertServerError();
-        $response->assertContent('could not reach renting service');
-
-        Http::assertNothingSent();
-        $this->assertEquals('Test', $equipment->refresh()->description);
-    }
-
-    public function test_update_values_multiple_times()
-    {
-        Http::fake(['renting/api/renting-values' => Http::response()]);
-
-        $doRequest = function (Equipment $equipment) {
-            return $this->withToken($this->validToken)
-                ->put(route('equipment.update', $equipment->id), [
-                    'description' => 'Updated',
-                    'unit' => 'mt',
-                    'in_stock' => '203',
-                    'effective_qty' => '223',
-                    'purchase_value' => '350.75',
-                    'unit_value' => '3.33',
-                    'replace_value' => '550.75',
-                    'values' => [
-                        [
-                            'value' => '30.00',
-                            'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
-                            'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
-                        ],
-                    ],
-                ], ['accept' => 'application/json']);
         };
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
@@ -741,23 +747,22 @@ class EquipmentTest extends TestCase
         Http::fake(['renting/api/renting-values' => fn () => throw new \Exception()]);
 
         $doRequest = function (Equipment $equipment) {
-            return $this->withToken($this->validToken)
-                ->put(route('equipment.update', $equipment->id), [
-                    'description' => 'Updated',
-                    'unit' => 'mt',
-                    'in_stock' => '203',
-                    'effective_qty' => '223',
-                    'purchase_value' => '350.75',
-                    'unit_value' => '3.33',
-                    'replace_value' => '550.75',
-                    'values' => [
-                        [
-                            'value' => '30.00',
-                            'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
-                            'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
-                        ],
+            return $this->put(route('equipment.update', $equipment->id), [
+                'description' => 'Updated',
+                'unit' => 'mt',
+                'in_stock' => '203',
+                'effective_qty' => '223',
+                'purchase_value' => '350.75',
+                'unit_value' => '3.33',
+                'replace_value' => '550.75',
+                'values' => [
+                    [
+                        'value' => '30.00',
+                        'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                        'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
                     ],
-                ], ['accept' => 'application/json']);
+                ],
+            ], ['accept' => 'application/json']);
         };
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
@@ -784,23 +789,22 @@ class EquipmentTest extends TestCase
         Http::fake(['renting/api/renting-values' => Http::response()]);
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
-        $response = $this->withToken($this->validToken)
-            ->put(route('equipment.update', $equipment->id), [
-                'description' => 'Updated',
-                'unit' => 'mt',
-                'in_stock' => '203',
-                'effective_qty' => '223',
-                'purchase_value' => '350.75',
-                'unit_value' => '3.33',
-                'replace_value' => '550.75',
-                'values' => [
-                    [
-                        'value' => '30.00',
-                        'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
-                        'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
-                    ],
+        $response = $this->put(route('equipment.update', $equipment->id), [
+            'description' => 'Updated',
+            'unit' => 'mt',
+            'in_stock' => '203',
+            'effective_qty' => '223',
+            'purchase_value' => '350.75',
+            'unit_value' => '3.33',
+            'replace_value' => '550.75',
+            'values' => [
+                [
+                    'value' => '30.00',
+                    'id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
+                    'period_id' => '2637fae5-963b-4f5c-8352-c37fbb915d49',
                 ],
-            ], ['accept' => 'application/json']);
+            ],
+        ], ['accept' => 'application/json']);
 
         Http::assertSentCount(1);
         $response->assertSuccessful();

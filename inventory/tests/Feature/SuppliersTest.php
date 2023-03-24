@@ -99,7 +99,7 @@ class SuppliersTest extends TestCase
 
     public function test_validation(): void
     {
-        $response = $this->withToken($this->validToken)->post(route('suppliers.store'), [
+        $response = $this->post(route('suppliers.store'), [
             'social_name' => '',
             'cnpj' => '000000000000',
             'email' => 'myemailatgmail.com',
@@ -118,7 +118,7 @@ class SuppliersTest extends TestCase
 
     public function test_create(): void
     {
-        $response = $this->withToken($this->validToken)->post(route('suppliers.store'), [
+        $response = $this->post(route('suppliers.store'), [
             'social_name' => 'Joaquim',
             'cnpj' => '20643221000195',
             'email' => 'myemail@gmail.com',
@@ -139,7 +139,7 @@ class SuppliersTest extends TestCase
             'cnpj' => '20.643.221/0001-95'
         ]);
 
-        $response = $this->withToken($this->validToken)->post(route('suppliers.store'), [
+        $response = $this->post(route('suppliers.store'), [
             'social_name' => 'Abracadabra',
             'cnpj' => '20.643.221/0001-95',
         ], ['accept' => 'application/json']);
@@ -164,7 +164,7 @@ class SuppliersTest extends TestCase
 
         $route = route('suppliers.update', $suppliers[0]->id);
 
-        $response = $this->withToken($this->validToken)->put($route, [
+        $response = $this->put($route, [
             'cnpj' => '29.039.173/0001-03',
         ], ['accept' => 'application/json']);
 
@@ -182,7 +182,7 @@ class SuppliersTest extends TestCase
 
         $route = route('suppliers.destroy', $supplier->id);
 
-        $response = $this->withToken($this->validToken)->delete($route, [], [
+        $response = $this->delete($route, [], [
             'accept' => 'application/json',
         ]);
 
