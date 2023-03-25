@@ -36,7 +36,7 @@
             "address": "http://payment",
             "check": {
                 "name": "payment-healthcheck",
-                "http": "http://payment/payment-methods",
+                "http": "http://payment/health",
                 "interval": "5m",
                 "timeout": "2s",
                 "status": "passing"

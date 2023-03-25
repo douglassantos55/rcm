@@ -51,6 +51,7 @@ public class AuthenticationHandler {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .authorizeHttpRequests(authorize -> authorize.requestMatchers("/health").permitAll())
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
                 .build();
