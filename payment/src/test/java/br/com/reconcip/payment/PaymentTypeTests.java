@@ -49,7 +49,7 @@ public class PaymentTypeTests {
                         .content("{\"name\":\"\"}")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+        ).andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     @Test

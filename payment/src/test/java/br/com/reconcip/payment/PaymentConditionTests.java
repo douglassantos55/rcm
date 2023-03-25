@@ -58,7 +58,7 @@ public class PaymentConditionTests {
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"a vista\",\"title\":\"a vista\",\"increment\":0,\"installments\":0,\"paymentType\":\"134a14c3-a397-4163-b035-9ba97c38792c\"}")
-        ).andExpect(MockMvcResultMatchers.status().isBadRequest());
+        ).andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     @Test

@@ -27,7 +27,7 @@ public class PaymentConditionController {
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentCondition create(@RequestBody @Valid br.com.reconcip.payment.dto.PaymentCondition paymentCondition) {
         PaymentType paymentType = this.paymentTypeRepository.findById(paymentCondition.paymentType()).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid payment type")
+                new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "invalid payment type")
         );
 
         PaymentCondition condition = new PaymentCondition();

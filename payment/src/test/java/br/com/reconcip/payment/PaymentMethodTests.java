@@ -52,7 +52,7 @@ public class PaymentMethodTests {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"\"}")
                 )
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class PaymentMethodTests {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"\"}")
                 )
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
     }
 
     @Test
