@@ -24,8 +24,12 @@ import (
 )
 
 const (
-	QUERY_CONTEXT_KEY    = "query"
-	JWT_TOKEN_SECRET_KEY = "JWT_SECRET"
+	QUERY_CONTEXT_KEY = "query"
+
+	JWT_TOKEN_SECRET_KEY    = "JWT_SECRET"
+	JWT_TOKEN_AUDIENCE_KEY  = "JWT_AUDIENCE"
+	JWT_TOKEN_ISSUER_KEY    = "JWT_ISSUER"
+	JWT_TOKEN_ALGORITHM_KEY = "JWT_ALGORITHM"
 )
 
 type Map struct {
@@ -47,10 +51,10 @@ func (t *TokenClaims) Valid() error {
 	if err := t.StandardClaims.Valid(); err != nil {
 		return err
 	}
-	if !t.VerifyAudience("reconcip", true) {
+	if !t.VerifyAudience(os.Getenv(JWT_TOKEN_AUDIENCE_KEY), true) {
 		vErr.Errors |= jwt.ValidationErrorAudience
 	}
-	if !t.VerifyIssuer("auth_service", true) {
+	if !t.VerifyIssuer(os.Getenv(JWT_TOKEN_ISSUER_KEY), true) {
 		vErr.Errors |= jwt.ValidationErrorIssuer
 	}
 	if vErr.Errors == 0 {
@@ -184,7 +188,7 @@ func main() {
 	router := httprouter.New()
 
 	jwtValidator := jwtauth.NewParser(func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if token.Method.Alg() != os.Getenv(JWT_TOKEN_ALGORITHM_KEY) {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(os.Getenv(JWT_TOKEN_SECRET_KEY)), nil

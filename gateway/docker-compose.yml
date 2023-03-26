@@ -7,8 +7,11 @@ services:
     ports:
       - '8000:8000'
     environment:
-      CONSUL_ADDR: 'consul:8500'
-      JWT_SECRET: BntMwKSsPu0RChMTMWrdHE3WKFMPebRC
+      CONSUL_ADDR: '${CONSUL_ADDR:-127.0.0.1:8500}'
+      JWT_SECRET: '${JWT_SECRET}'
+      JWT_ISSUER: '${JWT_ISSUER}'
+      JWT_AUDIENCE: '${JWT_AUDIENCE}'
+      JWT_ALGORITHM: '${JWT_ALGORITHM}'
     volumes:
       - '.:/app'
     networks:
