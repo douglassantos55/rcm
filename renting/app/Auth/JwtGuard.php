@@ -51,14 +51,13 @@ class JwtGuard implements Guard
             return null;
         }
 
-        $tokenStr = str_ireplace('Bearer ', '', $header);
-
-        $constraints = [
+        $token = $this->decoder->decode(
+            str_ireplace('Bearer ', '', $header),
+            config('auth.jwt.algorithm'),
+            config('auth.jwt.secret'),
             new IssuedByConstraint(config('auth.jwt.issuer')),
             new IntendedForConstraint(config('auth.jwt.audience')),
-        ];
-
-        $token = $this->decoder->decode($tokenStr, 'HS256', config('auth.jwt.secret'), ...$constraints);
+        );
 
         if (is_null($token)) {
             return null;

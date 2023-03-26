@@ -118,6 +118,7 @@ return [
 
 
     'jwt' => [
+        'algorithm' => env('JWT_ALGORITHM'),
         'issuer' => env('JWT_ISSUER'),
         'audience' => env('JWT_AUDIENCE'),
         'secret' => env('JWT_SECRET'),
