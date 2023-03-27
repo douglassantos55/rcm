@@ -19,7 +19,7 @@ return new class extends Migration
             $table->uuid('payment_method_id');
             $table->uuid('payment_condition_id');
             $table->foreignUuid('customer_id')->references('id')->on('customers');
-            $table->foreignUuid('period_id')->references('id')->on('periods');
+            $table->uuid('period_id')->nullable();
             $table->integer('qty_days')->unsigned();
             $table->decimal('discount', 10)->nullable();
             $table->decimal('paid_value', 10)->nullable();

@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Http\Services\InventoryService;
 use App\Http\Services\PaymentService;
 use App\Models\Customer;
-use App\Models\Period;
 use App\Rules\Exists;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -44,7 +43,6 @@ class RentRequest extends FormRequest
             ],
             'period_id' => [
                 'required',
-                Rule::exists(Period::class, 'id')->withoutTrashed(),
             ],
             'items' => ['required'],
             'items.*.qty' => ['required', 'integer'],

@@ -23,14 +23,8 @@ Route::get('/health-check', function () {
 
 Route::middleware('auth')->group(function () {
     Route::apiResources([
-        '/periods' => PeriodController::class,
         '/customers' => CustomerController::class,
         '/rents' => RentController::class,
     ]);
 
-    Route::controller(RentingValueController::class)->group(function () {
-        Route::get('/renting-values', 'index')->name('renting-values.index');
-        Route::post('/renting-values', 'store')->name('renting-values.store');
-        Route::put('/renting-values', 'update')->name('renting-values.update');
-    });
 });

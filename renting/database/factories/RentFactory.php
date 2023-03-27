@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Customer;
-use App\Models\Period;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -25,7 +24,7 @@ class RentFactory extends Factory
             'payment_method_id' => $this->faker->uuid(),
             'payment_condition_id' => $this->faker->uuid(),
             'customer_id' => Customer::factory(),
-            'period_id' => Period::factory(),
+            'period_id' => $this->faker->uuid(),
             'qty_days' => $this->faker->randomNumber(),
         ];
     }
