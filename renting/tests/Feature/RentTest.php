@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Http\Services\Registry;
 use App\Models\Customer;
 use App\Models\Item;
-use App\Models\Period;
 use App\Models\Rent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -23,6 +22,7 @@ class RentTest extends TestCase
         $this->partialMock(Registry::class, function (MockInterface $mock) {
             $mock->shouldReceive('get')->with('inventory')->andReturn('inventory');
             $mock->shouldReceive('get')->with('payment')->andReturn('payment');
+            $mock->shouldReceive('get')->with('pricing')->andReturn('pricing');
         });
     }
 
@@ -31,6 +31,7 @@ class RentTest extends TestCase
         Http::fake([
             'payment/*' => Http::response(null, 404),
             'inventory/*' => Http::response(null, 404),
+            'pricing/*' => Http::response(null, 404),
         ]);
 
         $response = $this->post(route('rents.store'), [
@@ -79,9 +80,11 @@ class RentTest extends TestCase
 
     public function test_create_deleted_customer()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'bar'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'bar']),
+            'pricing/*' => Http::response(['foo' => 'bar']),
+        ]);
 
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create(['deleted_at' => now()]);
 
         $response = $this->post(route('rents.store'), [
@@ -99,7 +102,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -112,10 +115,12 @@ class RentTest extends TestCase
 
     public function test_create_deleted_period()
     {
-        Http::fake(['payment/*' => Http::response(['foo' => 'bar'])]);
+        Http::fake([
+            'payment/*' => Http::response(['foo' => 'bar']),
+            'pricing/*' => Http::response(null, 404),
+        ]);
 
         $customer = Customer::factory()->create();
-        $period = Period::factory()->create(['deleted_at' => now()]);
 
         $response = $this->post(route('rents.store'), [
             'start_date' => '2020-10-10',
@@ -132,7 +137,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -148,9 +153,9 @@ class RentTest extends TestCase
         Http::fake([
             'payment/*' => Http::response(['foo' => 'bar']),
             'inventory/*' => Http::response(['rent_value' => '0.35', 'unit_value' => 1000]),
+            'pricing/*' => Http::response(['foo' => 'bar']),
         ]);
 
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create();
 
         $response = $this->post(route('rents.store'), [
@@ -168,7 +173,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -188,7 +193,6 @@ class RentTest extends TestCase
      */
     public function test_create_invalid_token(string $token)
     {
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create();
 
         $response = $this->withToken($token)->post(route('rents.store'), [
@@ -196,7 +200,7 @@ class RentTest extends TestCase
             'end_date' => '2020-10-20 22:52:30',
             'qty_days' => '10',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -214,6 +218,7 @@ class RentTest extends TestCase
         Http::fake([
             'payment/*' => Http::response(null, 404),
             'inventory/*' => Http::response(null, 404),
+            'pricing/*' => Http::response(null, 404),
         ]);
 
         $rent = Rent::factory()->create();
@@ -266,13 +271,13 @@ class RentTest extends TestCase
     {
         Http::fake([
             'payment/*' => Http::response(['foo' => 'baz']),
+            'pricing/*' => Http::response(['foo' => 'baz']),
             'inventory/*' => Http::response([
                 'rent_value' => '0.3', 'unit_value' => '250'
             ]),
         ]);
 
         $rent = Rent::factory()->create();
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create(['deleted_at' => now()]);
 
         $response = $this->put(route('rents.update', $rent->id), [
@@ -290,7 +295,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -309,6 +314,7 @@ class RentTest extends TestCase
     {
         Http::fake([
             'payment/*' => Http::response(['foo' => 'baz']),
+            'pricing/*' => Http::response(null, 404),
             'inventory/*' => Http::response([
                 'rent_value' => '0.3', 'unit_value' => '250'
             ]),
@@ -316,7 +322,6 @@ class RentTest extends TestCase
 
         $rent = Rent::factory()->create();
         $customer = Customer::factory()->create();
-        $period = Period::factory()->create(['deleted_at' => now()]);
 
         $response = $this->put(route('rents.update', $rent->id), [
             'start_date' => '2020-10-10',
@@ -333,7 +338,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -352,12 +357,12 @@ class RentTest extends TestCase
     {
         Http::fake([
             'payment/*' => Http::response(['foo' => 'baz']),
+            'pricing/*' => Http::response(['foo' => 'baz']),
             'inventory/*' => Http::response([
                 'rent_value' => '0.3', 'unit_value' => '250'
             ]),
         ]);
 
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create();
         $uuid = '62578f05-85f2-442b-8412-df47d188e01b';
 
@@ -376,7 +381,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -393,13 +398,13 @@ class RentTest extends TestCase
     {
         Http::fake([
             'payment/*' => Http::response(['foo' => 'baz']),
+            'pricing/*' => Http::response(['foo' => 'baz']),
             'inventory/*' => Http::response([
                 'rent_value' => '0.3', 'unit_value' => '250'
             ]),
         ]);
 
         $rent = Rent::factory()->create(['deleted_at' => now()]);
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create();
 
         $response = $this->put(route('rents.update', $rent->id), [
@@ -417,7 +422,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -434,6 +439,7 @@ class RentTest extends TestCase
     {
         Http::fake([
             'payment/*' => Http::response(['foo' => 'baz']),
+            'pricing/*' => Http::response(['foo' => 'baz']),
             'inventory/api/equipment/3272' => Http::response([
                 'rent_value' => '0.3', 'unit_value' => '250'
             ]),
@@ -449,7 +455,6 @@ class RentTest extends TestCase
             ['equipment_id' => '3030', 'qty' => 1],
         ]);
 
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create();
 
         $response = $this->put(route('rents.update', $rent->id), [
@@ -467,7 +472,7 @@ class RentTest extends TestCase
             'observations' => '',
             'transporter' => '',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
@@ -486,7 +491,7 @@ class RentTest extends TestCase
         $this->assertEquals(500, $rent->items[0]->unit_value);
 
         $this->assertEquals(10, $rent->qty_days);
-        $this->assertEquals($period->id, $rent->period_id);
+        $this->assertEquals('bf18eb16-0b38-404a-8916-429638f1d793', $rent->period_id);
         $this->assertEquals($customer->id, $rent->customer_id);
     }
 
@@ -496,7 +501,6 @@ class RentTest extends TestCase
     public function test_update_invalid_token(string $token)
     {
         $rent = Rent::factory()->create();
-        $period = Period::factory()->create();
         $customer = Customer::factory()->create();
 
         $response = $this->withToken($token)->put(route('rents.update', $rent->id), [
@@ -504,7 +508,7 @@ class RentTest extends TestCase
             'end_date' => '2020-10-20',
             'qty_days' => '10',
             'customer_id' => $customer->id,
-            'period_id' => $period->id,
+            'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
             'payment_type_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_method_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',
             'payment_condition_id' => 'b7c09550-2907-459e-9dc5-c2116016bacd',

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Http\Services\InventoryService;
 use App\Http\Services\PaymentService;
+use App\Http\Services\PricingService;
 use App\Models\Customer;
 use App\Rules\Exists;
 use Illuminate\Foundation\Http\FormRequest;
@@ -24,8 +25,11 @@ class RentRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
      */
-    public function rules(PaymentService $paymentService, InventoryService $inventoryService): array
-    {
+    public function rules(
+        PaymentService $paymentService,
+        InventoryService $inventoryService,
+        PricingService $pricingService,
+    ): array {
         return [
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date'],
@@ -41,9 +45,7 @@ class RentRequest extends FormRequest
                 'required',
                 Rule::exists(Customer::class, 'id')->withoutTrashed(),
             ],
-            'period_id' => [
-                'required',
-            ],
+            'period_id' => ['required', new Exists($pricingService)],
             'items' => ['required'],
             'items.*.qty' => ['required', 'integer'],
             'items.*.equipment_id' => ['required', new Exists($inventoryService)],

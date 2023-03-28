@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Http\Services\ConsulRegistry;
 use App\Http\Services\InventoryService;
 use App\Http\Services\PaymentService;
+use App\Http\Services\PricingService;
 use App\Http\Services\Registry;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
             $registry = $app->make(Registry::class);
 
             return new InventoryService($registry->get($service));
+        });
+
+        $this->app->singleton(PricingService::class, function (Application $app) {
+            $service = env('PRICING_SERVICE');
+            $registry = $app->make(Registry::class);
+
+            return new PricingService($registry->get($service));
         });
 
         $this->app->singleton(Registry::class, function () {
