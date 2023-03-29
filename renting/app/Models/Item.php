@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Http\Services\InventoryService;
+use App\Services\InventoryService;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,11 +21,6 @@ class Item extends Model
         'unit_value',
         'equipment_id',
     ];
-
-    protected $appends = [
-        'equipment',
-    ];
-
 
     public static function booted(): void
     {

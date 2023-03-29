@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Rest;
 
+use App\Services\CircuitBreaker\CircuitBreaker;
+use App\Services\PaymentService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class PaymentService implements Service
+class RestPaymentService implements PaymentService
 {
     const NAME = 'payment';
     const MAX_ATTEMPTS = 5;

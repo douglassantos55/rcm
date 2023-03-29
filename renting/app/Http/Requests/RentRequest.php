@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Services\InventoryService;
-use App\Http\Services\PaymentService;
-use App\Http\Services\PricingService;
+use App\Services\InventoryService;
+use App\Services\PaymentService;
+use App\Services\PricingService;
 use App\Models\Customer;
 use App\Rules\Exists;
 use Illuminate\Foundation\Http\FormRequest;

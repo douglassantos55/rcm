@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Registry;
 
 use Consul\Services\Catalog;
 use Illuminate\Support\Facades\Log;

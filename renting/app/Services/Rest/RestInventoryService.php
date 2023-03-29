@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Rest;
 
+use App\Services\CircuitBreaker\CircuitBreaker;
+use App\Services\InventoryService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class InventoryService implements Service
+class RestInventoryService implements InventoryService
 {
     const MAX_ATTEMPTS = 5;
     const NAME = 'inventory';

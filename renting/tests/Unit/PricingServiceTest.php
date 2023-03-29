@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Http\Services\PricingService;
-use App\Http\Services\RateLimitBreaker;
+use App\Services\CircuitBreaker\RateLimitBreaker;
+use App\Services\Rest\RestPricingService;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,7 +15,7 @@ class PricingServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(null, 500)]);
 
-        $service = new PricingService('pricing', new RateLimitBreaker());
+        $service = new RestPricingService('pricing', new RateLimitBreaker());
         $this->assertNull($service->getPeriod('04fedb8b-87c3-44a0-9b42-b4043a7afe8a'));
     }
 
@@ -23,7 +23,7 @@ class PricingServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(['foo' => 'client'], 404)]);
 
-        $service = new PricingService('pricing', new RateLimitBreaker());
+        $service = new RestPricingService('pricing', new RateLimitBreaker());
         $this->assertNull($service->getPeriod('04fedb8b-87c3-44a0-9b42-b4043a7afe8a'));
     }
 
@@ -36,7 +36,7 @@ class PricingServiceTest extends TestCase
             'pricing/api/periods/*' => Http::response(['foo' => 'check'], 404),
         ]);
 
-        $service = new PricingService('pricing', new RateLimitBreaker());
+        $service = new RestPricingService('pricing', new RateLimitBreaker());
         $this->assertNotNull($service->getPeriod($uuid));
         $this->assertNull($service->getPeriod('5b1721e4-6841-48aa-a785-c06ff5317f4d'));
     }
@@ -45,7 +45,7 @@ class PricingServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(['foo' => 'bar'])]);
 
-        $service = new PricingService('pricing', new RateLimitBreaker());
+        $service = new RestPricingService('pricing', new RateLimitBreaker());
         $service->getPeriod('04fedb8b-87c3-44a0-9b42-b4043a7afe8a');
 
         Http::assertSent(function (Request $request) {
@@ -58,7 +58,7 @@ class PricingServiceTest extends TestCase
         Http::fake(['*' => Http::response(null, 500)]);
 
         $uuid = '04fedb8b-87c3-44a0-9b42-b4043a7afe8a';
-        $service = new PricingService('pricing', new RateLimitBreaker());
+        $service = new RestPricingService('pricing', new RateLimitBreaker());
 
         for ($i = 0; $i < 5; $i++) {
             $this->assertNull($service->getPeriod($uuid));
@@ -73,7 +73,7 @@ class PricingServiceTest extends TestCase
         Http::fake(['*' => Http::response(['foo' => 'breaker'], 404)]);
 
         $uuid = '04fedb8b-87c3-44a0-9b42-b4043a7afe8a';
-        $service = new PricingService('pricing', new RateLimitBreaker());
+        $service = new RestPricingService('pricing', new RateLimitBreaker());
 
         for ($i = 0; $i < 5; $i++) {
             $this->assertNull($service->getPeriod($uuid));
@@ -92,7 +92,7 @@ class PricingServiceTest extends TestCase
             'pricing/api/periods/*' => Http::response(null, 500),
         ]);
 
-        $service = new PricingService('pricing', new RateLimitBreaker());
+        $service = new RestPricingService('pricing', new RateLimitBreaker());
         for ($i = 0; $i < 4; $i++) {
             $this->assertNull($service->getPeriod('something'));
         }

@@ -2,13 +2,16 @@
 
 namespace App\Providers;
 
-use App\Http\Services\CircuitBreaker;
-use App\Http\Services\ConsulRegistry;
-use App\Http\Services\InventoryService;
-use App\Http\Services\PaymentService;
-use App\Http\Services\PricingService;
-use App\Http\Services\RateLimitBreaker;
-use App\Http\Services\Registry;
+use App\Services\CircuitBreaker\CircuitBreaker;
+use App\Services\CircuitBreaker\RateLimitBreaker;
+use App\Services\InventoryService;
+use App\Services\PaymentService;
+use App\Services\PricingService;
+use App\Services\Registry\ConsulRegistry;
+use App\Services\Registry\Registry;
+use App\Services\Rest\RestInventoryService;
+use App\Services\Rest\RestPaymentService;
+use App\Services\Rest\RestPricingService;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
 
-            return new PaymentService($registry->get($service), $breaker);
+            return new RestPaymentService($registry->get($service), $breaker);
         });
 
         $this->app->singleton(InventoryService::class, function (Application $app) {
@@ -32,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
 
-            return new InventoryService($registry->get($service), $breaker);
+            return new RestInventoryService($registry->get($service), $breaker);
         });
 
         $this->app->singleton(PricingService::class, function (Application $app) {
@@ -40,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
 
-            return new PricingService($registry->get($service), $breaker);
+            return new RestPricingService($registry->get($service), $breaker);
         });
 
         $this->app->singleton(Registry::class, ConsulRegistry::class);

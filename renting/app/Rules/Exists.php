@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-use App\Http\Services\Service;
+use App\Services\Service;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 

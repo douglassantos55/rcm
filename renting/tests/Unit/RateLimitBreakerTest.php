@@ -2,8 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Http\Services\RateLimitBreaker;
-use Illuminate\Support\Facades\Http;
+use App\Services\CircuitBreaker\RateLimitBreaker;
 use Illuminate\Support\Facades\RateLimiter;
 use RuntimeException;
 use Tests\TestCase;

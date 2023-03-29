@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Http\Services\Registry;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Rent;
+use App\Services\Registry\Registry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Mockery\MockInterface;

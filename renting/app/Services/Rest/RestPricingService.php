@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Rest;
 
+use App\Services\CircuitBreaker\CircuitBreaker;
+use App\Services\PricingService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class PricingService implements Service
+class RestPricingService implements PricingService
 {
     const NAME = 'pricing';
     const MAX_ATTEMPTS = 5;
