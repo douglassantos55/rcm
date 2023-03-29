@@ -23,7 +23,7 @@ class EquipmentTest extends TestCase
         parent::setUp();
 
         $this->partialMock(Registry::class, function (MockInterface $mock) {
-            $mock->shouldReceive('get')->andReturn('renting');
+            $mock->shouldReceive('get')->andReturn('pricing');
         });
     }
 
@@ -247,7 +247,7 @@ class EquipmentTest extends TestCase
 
     public function test_create_renting_values()
     {
-        Http::fake(['renting/api/renting-values' => Http::response()]);
+        Http::fake(['pricing/api/renting-values' => Http::response()]);
 
         $response = $this->post(route('equipment.store'), [
             'description' => 'With renting values',
@@ -288,7 +288,7 @@ class EquipmentTest extends TestCase
                 }
             }
 
-            return $request->url() === 'renting/api/renting-values'
+            return $request->url() === 'pricing/api/renting-values'
                 && $request->hasHeader('Authorization')
                 && $request->method() === 'POST'
                 && $response->successful();
@@ -297,7 +297,7 @@ class EquipmentTest extends TestCase
 
     public function test_server_error_creating_renting_values()
     {
-        Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
+        Http::fake(['pricing/api/renting-values' => Http::response(null, 500)]);
 
         $response = $this->post(route('equipment.store'), [
             'description' => 'Ugabuga',
@@ -324,7 +324,7 @@ class EquipmentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         Http::assertSent(function (Request $request, Response $response) {
-            return $request->url() === 'renting/api/renting-values'
+            return $request->url() === 'pricing/api/renting-values'
                 && $request->hasHeader('Authorization')
                 && $request->method() === 'POST'
                 && $response->serverError();
@@ -337,7 +337,7 @@ class EquipmentTest extends TestCase
     public function test_request_error_creating_renting_values()
     {
         Http::fake([
-            'renting/api/renting-values' => Http::response([
+            'pricing/api/renting-values' => Http::response([
                 'errors' => [
                     'values.0.value' => 'The value field must be a number.',
                     'values.0.period_id' => 'The period id field is invalid.',
@@ -373,7 +373,7 @@ class EquipmentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         Http::assertSent(function (Request $request, Response $response) {
-            return $request->url() === 'renting/api/renting-values'
+            return $request->url() === 'pricing/api/renting-values'
                 && $request->hasHeader('Authorization')
                 && $request->method() === 'POST'
                 && $response->clientError();
@@ -393,7 +393,7 @@ class EquipmentTest extends TestCase
     public function test_update_renting_values_client_error()
     {
         Http::fake([
-            'renting/api/renting-values' => Http::response([
+            'pricing/api/renting-values' => Http::response([
                 'errors' => [
                     'values.0.value' => 'The value field must be a number.',
                     'values.1.value' => 'The value field must be a number.',
@@ -429,7 +429,7 @@ class EquipmentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         Http::assertSent(function (Request $request, Response $response) {
-            return $request->url() === 'renting/api/renting-values'
+            return $request->url() === 'pricing/api/renting-values'
                 && $request->hasHeader('Authorization')
                 && $request->method() === 'PUT'
                 && $response->clientError();
@@ -446,7 +446,7 @@ class EquipmentTest extends TestCase
 
     public function test_update_renting_values_server_error()
     {
-        Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
+        Http::fake(['pricing/api/renting-values' => Http::response(null, 500)]);
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
@@ -475,7 +475,7 @@ class EquipmentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         Http::assertSent(function (Request $request, Response $response) {
-            return $request->url() === 'renting/api/renting-values'
+            return $request->url() === 'pricing/api/renting-values'
                 && $request->hasHeader('Authorization')
                 && $request->method() === 'PUT'
                 && $response->serverError();
@@ -487,7 +487,7 @@ class EquipmentTest extends TestCase
 
     public function test_update_renting_values()
     {
-        Http::fake(['renting/api/renting-values' => Http::response()]);
+        Http::fake(['pricing/api/renting-values' => Http::response()]);
 
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
@@ -525,7 +525,7 @@ class EquipmentTest extends TestCase
                 return false;
             }
 
-            return $request->url() === 'renting/api/renting-values'
+            return $request->url() === 'pricing/api/renting-values'
                 && $request->hasHeader('Authorization')
                 && $request->method() === 'PUT'
                 && $response->successful();
@@ -534,7 +534,7 @@ class EquipmentTest extends TestCase
 
     public function test_create_values_exception()
     {
-        Http::fake(['renting/api/renting-values' => function () {
+        Http::fake(['pricing/api/renting-values' => function () {
             throw new HttpClientException('could not resolve host');
         }]);
 
@@ -568,7 +568,7 @@ class EquipmentTest extends TestCase
 
     public function test_create_values_multiple_times()
     {
-        Http::fake(['renting/api/renting-values' => Http::response()]);
+        Http::fake(['pricing/api/renting-values' => Http::response()]);
 
         $doRequest = function () {
             return $this->post(route('equipment.store'), [
@@ -605,7 +605,7 @@ class EquipmentTest extends TestCase
 
     public function test_create_values_max_attempts()
     {
-        Http::fake(['renting/api/renting-values' => Http::response(null, 500)]);
+        Http::fake(['pricing/api/renting-values' => Http::response(null, 500)]);
 
         $doRequest = function () {
             return $this->post(route('equipment.store'), [
@@ -644,10 +644,10 @@ class EquipmentTest extends TestCase
     public function test_create_values_reset()
     {
         for ($i = 0; $i < 4; $i++) {
-            RateLimiter::hit('renting-service');
+            RateLimiter::hit('pricing');
         }
 
-        Http::fake(['renting/api/renting-values' => Http::response()]);
+        Http::fake(['pricing/api/renting-values' => Http::response()]);
 
         $response = $this->post(route('equipment.store'), [
             'description' => 'Max attempts',
@@ -672,12 +672,12 @@ class EquipmentTest extends TestCase
 
         Http::assertSentCount(1);
         $response->assertSuccessful();
-        $this->assertEquals(5, RateLimiter::remaining('renting-service', 5));
+        $this->assertEquals(5, RateLimiter::remaining('pricing', 5));
     }
 
     public function test_update_values_exception()
     {
-        Http::fake(['renting/api/renting-values' => function () {
+        Http::fake(['pricing/api/renting-values' => function () {
             throw new HttpClientException('could not resolve host');
         }]);
 
@@ -709,7 +709,7 @@ class EquipmentTest extends TestCase
 
     public function test_update_values_multiple_times()
     {
-        Http::fake(['renting/api/renting-values' => Http::response()]);
+        Http::fake(['pricing/api/renting-values' => Http::response()]);
 
         $doRequest = function (Equipment $equipment) {
             return $this->put(route('equipment.update', $equipment->id), [
@@ -744,7 +744,7 @@ class EquipmentTest extends TestCase
 
     public function test_update_values_max_attempts()
     {
-        Http::fake(['renting/api/renting-values' => fn () => throw new \Exception()]);
+        Http::fake(['pricing/api/renting-values' => fn () => throw new \Exception()]);
 
         $doRequest = function (Equipment $equipment) {
             return $this->put(route('equipment.update', $equipment->id), [
@@ -783,10 +783,10 @@ class EquipmentTest extends TestCase
     public function test_update_values_reset()
     {
         for ($i = 0; $i < 4; $i++) {
-            RateLimiter::hit('renting-service');
+            RateLimiter::hit('pricing');
         }
 
-        Http::fake(['renting/api/renting-values' => Http::response()]);
+        Http::fake(['pricing/api/renting-values' => Http::response()]);
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
         $response = $this->put(route('equipment.update', $equipment->id), [
@@ -808,7 +808,7 @@ class EquipmentTest extends TestCase
 
         Http::assertSentCount(1);
         $response->assertSuccessful();
-        $this->assertEquals(5, RateLimiter::remaining('renting-service', 5));
+        $this->assertEquals(5, RateLimiter::remaining('pricing', 5));
     }
 
     /**

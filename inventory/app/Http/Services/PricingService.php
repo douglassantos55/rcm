@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
-class RentingService
+class PricingService
 {
     const MAX_ATTEMPTS = 5;
-    const NAME = 'renting-service';
+    const NAME = 'pricing';
 
     /** @var PendingRequest */
     private $client;

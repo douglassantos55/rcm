@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
-use App\Http\Services\RentingService;
+use App\Http\Services\PricingService;
 use App\Models\Equipment;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +11,7 @@ class EquipmentController extends Controller
 {
     private $service;
 
-    public function __construct(RentingService $service)
+    public function __construct(PricingService $service)
     {
         $this->service = $service;
     }
