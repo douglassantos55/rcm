@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
-use App\Http\Services\PricingService;
 use App\Models\Equipment;
+use App\Services\PricingService;
 use Illuminate\Support\Facades\DB;
 
 class EquipmentController extends Controller

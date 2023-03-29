@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Http\Services\Registry;
 use App\Models\Equipment;
 use App\Models\Supplier;
+use App\Services\Registry\Registry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Http\Client\Request;

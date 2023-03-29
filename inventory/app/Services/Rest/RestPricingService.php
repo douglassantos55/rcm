@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Rest;
 
+use App\Services\PricingService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
-class PricingService
+class RestPricingService implements PricingService
 {
     const MAX_ATTEMPTS = 5;
     const NAME = 'pricing';
@@ -45,7 +46,7 @@ class PricingService
         }
     }
 
-    public function updateRentingValues(array $values)
+    public function updateRentingValues(array $values): Response
     {
         if (RateLimiter::tooManyAttempts(self::NAME, self::MAX_ATTEMPTS)) {
             return response('renting service out of order', 500);

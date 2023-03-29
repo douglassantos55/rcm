@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
-use App\Http\Services\ConsulRegistry;
-use App\Http\Services\PricingService;
-use App\Http\Services\Registry;
+use App\Services\PricingService;
+use App\Services\Registry\ConsulRegistry;
+use App\Services\Registry\Registry;
+use App\Services\Rest\RestPricingService;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Support\Facades\Response;
@@ -21,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
             $service = env('PRICING_SERVICE');
             $registry = $app->make(Registry::class);
 
-            return new PricingService($registry->get($service));
+            return new RestPricingService($registry->get($service));
         });
 
         $this->app->singleton(Registry::class, function () {
