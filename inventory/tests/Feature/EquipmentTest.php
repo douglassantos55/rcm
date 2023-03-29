@@ -638,7 +638,7 @@ class EquipmentTest extends TestCase
 
         Http::assertSentCount(5);
         $response->assertServerError();
-        $response->assertContent('renting service out of order');
+        $response->assertContent('could not reach renting service');
     }
 
     public function test_create_values_reset()
@@ -775,7 +775,7 @@ class EquipmentTest extends TestCase
 
         Http::assertNothingSent();
         $response->assertServerError();
-        $response->assertContent('renting service out of order');
+        $response->assertContent('could not reach renting service');
 
         $this->assertEquals('Test', $equipment->refresh()->description);
     }

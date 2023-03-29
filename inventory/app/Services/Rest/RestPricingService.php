@@ -2,12 +2,11 @@
 
 namespace App\Services\Rest;
 
+use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\PricingService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 
 class RestPricingService implements PricingService
 {
@@ -17,55 +16,54 @@ class RestPricingService implements PricingService
     /** @var PendingRequest */
     private $client;
 
-    public function __construct(string $serviceUrl)
+    /**
+     * @var CircuitBreaker
+     */
+    private $breaker;
+
+    public function __construct(string $serviceUrl, CircuitBreaker $breaker)
     {
+        $this->breaker = $breaker;
+
         $this->client = Http::baseUrl($serviceUrl)
             ->accept('application/json');
     }
 
     public function createRentingValues(array $values): Response
     {
-        if (RateLimiter::tooManyAttempts(self::NAME, self::MAX_ATTEMPTS)) {
-            return response('renting service out of order', 500);
-        }
-
-        try {
+        $response = $this->breaker->invoke(function () use ($values) {
             $response = $this->client
                 ->timeout(2)
                 ->withToken(request()->bearerToken())
                 ->post('/api/renting-values', ['values' => $values])
                 ->throwIfServerError();
 
-            RateLimiter::clear(self::NAME);
             return response()->fromClient($response);
-        } catch (\Exception $ex) {
-            RateLimiter::hit(self::NAME);
+        }, self::NAME, self::MAX_ATTEMPTS);
 
-            Log::error('could not create renting values: ' . $ex->getMessage());
+        if (is_null($response)) {
             return response('could not reach renting service', 500);
         }
+
+        return $response;
     }
 
     public function updateRentingValues(array $values): Response
     {
-        if (RateLimiter::tooManyAttempts(self::NAME, self::MAX_ATTEMPTS)) {
-            return response('renting service out of order', 500);
-        }
-
-        try {
+        $response = $this->breaker->invoke(function () use ($values) {
             $response = $this->client
                 ->timeout(2)
                 ->withToken(request()->bearerToken())
                 ->put('/api/renting-values', ['values' => $values])
                 ->throwIfServerError();
 
-            RateLimiter::clear(self::NAME);
             return response()->fromClient($response);
-        } catch (\Exception $ex) {
-            RateLimiter::hit(self::NAME);
+        }, self::NAME, self::MAX_ATTEMPTS);
 
-            Log::error('could not update renting values: ' . $ex->getMessage());
+        if (is_null($response)) {
             return response('could not reach renting service', 500);
         }
+
+        return $response;
     }
 }
