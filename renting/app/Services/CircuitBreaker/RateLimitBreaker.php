@@ -4,28 +4,56 @@ namespace App\Services\CircuitBreaker;
 
 use App\Exceptions\ServiceOutOfOrderException;
 use Exception;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiter;
+use Illuminate\Log\Logger;
 
 class RateLimitBreaker implements CircuitBreaker
 {
+    /**
+     * @var RateLimiter
+     */
+    private $limiter;
+
+    /**
+     * @var Logger
+     */
+    private $logger;
+
+    public function __construct(RateLimiter $limiter, Logger $logger)
+    {
+        $this->logger = $logger;
+        $this->limiter = $limiter;
+    }
+
     public function invoke(callable $callback, string $service, int $attempts): mixed
     {
         try {
-            if (RateLimiter::tooManyAttempts($service, $attempts)) {
+            if ($this->limiter->tooManyAttempts($service, $attempts)) {
                 throw new ServiceOutOfOrderException();
             }
 
             $result = $callback();
-            RateLimiter::clear($service);
+            $this->limiter->clear($service);
 
             return $result;
         } catch (ServiceOutOfOrderException) {
-            Log::warning(sprintf('%s service out of order', $service));
+            $this->logger->warning('Service out of order', [
+                'service' => $service,
+                'available_in' => $this->limiter->availableIn($service),
+            ]);
+
             return null;
         } catch (Exception $ex) {
-            Log::error('could not invoke service: ' . $ex->getMessage());
-            RateLimiter::hit($service);
+            $this->limiter->hit($service);
+
+            $this->logger->error('Could not invoke service', [
+                'service' => $service,
+                'max_attempts' => $attempts,
+                'attempts' => $this->limiter->attempts($service),
+                'remaining' => $this->limiter->remaining($service, $attempts),
+                'message' => $ex->getMessage(),
+            ]);
+
             return null;
         }
     }
