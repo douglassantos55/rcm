@@ -41,6 +41,20 @@
                 "timeout": "2s",
                 "status": "passing"
             }
+        },
+        {
+            "id": "pricing",
+            "name": "pricing",
+            "port": 80,
+            "tags": ["v1"],
+            "address": "http://pricing",
+            "check": {
+                "name": "pricing-healthcheck",
+                "http": "http://pricing/api/health-check",
+                "interval": "5m",
+                "timeout": "1s",
+                "status": "passing"
+            }
         }
     ]
 }
