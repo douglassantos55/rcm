@@ -19,10 +19,12 @@ Route::get('/health-check', function () {
     return response()->json(['status' => 'healthy']);
 });
 
-Route::apiResource('/periods', PeriodController::class);
+Route::middleware('auth')->group(function () {
+    Route::apiResource('/periods', PeriodController::class);
 
-Route::controller(RentingValueController::class)->group(function () {
-    Route::get('/renting-values', 'index')->name('renting-values.index');
-    Route::post('/renting-values', 'store')->name('renting-values.store');
-    Route::put('/renting-values', 'update')->name('renting-values.update');
+    Route::controller(RentingValueController::class)->group(function () {
+        Route::get('/renting-values', 'index')->name('renting-values.index');
+        Route::post('/renting-values', 'store')->name('renting-values.store');
+        Route::put('/renting-values', 'update')->name('renting-values.update');
+    });
 });

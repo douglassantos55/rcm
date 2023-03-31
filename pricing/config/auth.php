@@ -14,7 +14,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => 'web',
+        'guard' => 'api',
         'passwords' => 'users',
     ],
 
@@ -36,6 +36,10 @@ return [
     */
 
     'guards' => [
+        'api' => [
+            'driver' => 'jwt',
+            'provider' => 'users',
+        ],
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
@@ -112,4 +116,10 @@ return [
 
     'password_timeout' => 10800,
 
+    'jwt' => [
+        'algorithm' => env('JWT_ALGORITHM'),
+        'secret' => env('JWT_SECRET'),
+        'issuer' => env('JWT_ISSUER'),
+        'audience' => env('JWT_AUDIENCE'),
+    ],
 ];
