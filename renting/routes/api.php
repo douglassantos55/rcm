@@ -1,10 +1,11 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\RentController;
-use App\Http\Controllers\RentingValueController;
+use App\Http\Middleware\Instrumentation;
+use App\Metrics\Registry;
 use Illuminate\Support\Facades\Route;
+use Prometheus\RenderTextFormat;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,13 +19,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/health-check', function () {
-    return response('');
+    return response()->json(['status' => 'healthy']);
 });
 
-Route::middleware('auth')->group(function () {
+
+Route::middleware(['auth', Instrumentation::class])->group(function () {
     Route::apiResources([
         '/customers' => CustomerController::class,
         '/rents' => RentController::class,
     ]);
 
+    Route::get('/metrics', function (Registry $registry) {
+        $renderer = new RenderTextFormat();
+        return $renderer->render($registry->getMetrics());
+    });
 });

@@ -23,6 +23,11 @@ class Registry implements MetricsRegistry
         $this->registry = $registry;
     }
 
+    public function getMetrics(): array
+    {
+        return $this->registry->getMetricFamilySamples();
+    }
+
     public function getOrCreateGauge(string $name, string $namespace = '', array $labels = []): Gauge
     {
         $gauge = $this->registry->getOrRegisterGauge($namespace, $name, '', $labels);
@@ -37,7 +42,7 @@ class Registry implements MetricsRegistry
 
     public function getOrCreateHistogram(string $name, string $namespace = '', array $labels = [], array $buckets = []): Histogram
     {
-        $histogram = $this->registry->getOrRegisterHistogram($namespace, $name, '', $labels, $buckets);
+        $histogram = $this->registry->getOrRegisterHistogram($namespace, $name, '', $labels, $buckets ?: null);
         return new PrometheusHistogram($histogram);
     }
 }

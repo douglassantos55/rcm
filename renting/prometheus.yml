@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+  scrape_timeout: 3s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: renting
+    metrics_path: /api/metrics
+    authorization:
+      credentials_file: secret
+    static_configs:
+      - targets: ['renting']

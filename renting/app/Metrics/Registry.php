@@ -4,6 +4,8 @@ namespace App\Metrics;
 
 interface Registry
 {
+    public function getMetrics(): array;
+
     /**
      * Creates or returns an existing counter by name
      *

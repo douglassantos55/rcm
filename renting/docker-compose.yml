@@ -71,6 +71,16 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - renting
+
+    prometheus:
+        image: 'prom/prometheus'
+        ports:
+            - '9090:9090'
+        volumes:
+            - './.secret:/etc/prometheus/secret'
+            - './prometheus.yml:/etc/prometheus/prometheus.yml'
+        networks:
+            - renting
 networks:
     renting:
         driver: bridge
