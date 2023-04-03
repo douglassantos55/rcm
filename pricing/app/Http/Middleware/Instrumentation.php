@@ -23,8 +23,8 @@ class Instrumentation
 
     public function __construct(Registry $registry)
     {
-        $this->requestsCounter = $registry->getOrCreateCounter('total_requests', 'renting', ['status']);
-        $this->requestDuration = $registry->getOrCreateHistogram('request_duration_seconds', 'renting', [], [1, 2, 3, 4, 5]);
+        $this->requestsCounter = $registry->getOrCreateCounter('total_requests', 'pricing', ['status']);
+        $this->requestDuration = $registry->getOrCreateHistogram('request_duration_seconds', 'pricing', [], [1, 2, 3, 4, 5]);
     }
 
     /**
