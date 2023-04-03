@@ -3,6 +3,8 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Prometheus\Storage\Adapter;
+use Prometheus\Storage\InMemory;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -11,6 +13,7 @@ abstract class TestCase extends BaseTestCase
     public function setUp(): void
     {
         parent::setUp();
+        $this->app->singleton(Adapter::class, InMemory::class);
         $this->withToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJpc3MiOiJ0ZXN0aW5nIiwiYXVkIjoidGVzdGluZyJ9.jq-HNs9D4J8Ujl7tOloioSLANqq0hRlPwZl4x-C60LY');
     }
 
