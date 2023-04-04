@@ -13,3 +13,24 @@ scrape_configs:
       credentials_file: secret
     static_configs:
       - targets: ['renting']
+
+  - job_name: inventory
+    metrics_path: /api/metrics
+    authorization:
+      credentials_file: secret
+    static_configs:
+      - targets: ['inventory']
+
+  - job_name: pricing
+    metrics_path: /api/metrics
+    authorization:
+      credentials_file: secret
+    static_configs:
+      - targets: ['pricing']
+
+  - job_name: payment
+    metrics_path: /actuator/prometheus
+    authorization:
+      credentials_file: secret
+    static_configs:
+      - targets: ['payment']
