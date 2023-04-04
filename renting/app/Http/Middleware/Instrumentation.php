@@ -21,10 +21,16 @@ class Instrumentation
      */
     private $requestDuration;
 
+    /**
+     * @var Histogram
+     */
+    private $memoryUsage;
+
     public function __construct(Registry $registry)
     {
         $this->requestsCounter = $registry->getOrCreateCounter('total_requests', 'renting', ['status']);
         $this->requestDuration = $registry->getOrCreateHistogram('request_duration_seconds', 'renting', [], [1, 2, 3, 4, 5]);
+        $this->memoryUsage = $registry->getOrCreateHistogram('memory_usage_mb', 'renting', [], [5, 10, 15, 20, 30, 50, 100]);
     }
 
     /**
@@ -39,6 +45,7 @@ class Instrumentation
 
         $this->requestDuration->observe((time() - $start));
         $this->requestsCounter->increment([$response->status()]);
+        $this->memoryUsage->observe(memory_get_peak_usage(true) / 1000 / 1000);
 
         return $response;
     }
