@@ -45,8 +45,9 @@ class AppServiceProvider extends ServiceProvider
             $service = env('INVENTORY_SERVICE');
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
+            $tracer = $app->make(Tracer::class);
 
-            return new RestInventoryService($registry->get($service), $breaker);
+            return new RestInventoryService($registry->get($service), $breaker, $tracer);
         });
 
         $this->app->singleton(PricingService::class, function (Application $app) {

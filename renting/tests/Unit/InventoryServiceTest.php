@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\CircuitBreaker\RateLimitBreaker;
 use App\Services\Rest\RestInventoryService;
+use App\Services\Tracer;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Client\Request;
 use Illuminate\Log\Logger;
@@ -22,10 +23,16 @@ class InventoryServiceTest extends TestCase
      */
     private $breaker;
 
+    /**
+     * @var Tracer
+     */
+    private $tracer;
+
     public function setUp(): void
     {
         parent::setUp();
 
+        $this->tracer = app(Tracer::class);
         $this->limiter = app(RateLimiter::class);
         $this->breaker = new RateLimitBreaker($this->limiter, app(Logger::class));
     }
@@ -34,7 +41,7 @@ class InventoryServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(null, 500)]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         $equipment = $service->getEquipment('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
 
         $this->assertNull($equipment);
@@ -44,7 +51,7 @@ class InventoryServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(null, 422)]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         $equipment = $service->getEquipment('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
 
         $this->assertNull($equipment);
@@ -54,7 +61,7 @@ class InventoryServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(null, 404)]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         $equipment = $service->getEquipment('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
 
         $this->assertNull($equipment);
@@ -65,7 +72,7 @@ class InventoryServiceTest extends TestCase
         $uuid = 'ce283991-b0fb-4ea9-8286-f79157dfd3c1';
         Http::fake(['*' => Http::response(['id' => $uuid])]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         $equipment = $service->getEquipment($uuid);
 
         $this->assertNotNull($equipment);
@@ -76,7 +83,7 @@ class InventoryServiceTest extends TestCase
         $uuid = 'ce283991-b0fb-4ea9-8286-f79157dfd3c1';
         Http::fake(['*' => Http::response(null, 500)]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         for ($i = 0; $i < 5; $i++) {
             $service->getEquipment($uuid);
         }
@@ -90,7 +97,7 @@ class InventoryServiceTest extends TestCase
         $uuid = 'ce283991-b0fb-4ea9-8286-f79157dfd3c1';
         Http::fake(['*' => Http::response(null, 404)]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         for ($i = 0; $i < 5; $i++) {
             $service->getEquipment($uuid);
         }
@@ -108,7 +115,7 @@ class InventoryServiceTest extends TestCase
             'inventory/api/equipment/aoeu' => Http::response(null, 500),
         ]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         for ($i = 0; $i < 4; $i++) {
             $service->getEquipment('aoeu');
         }
@@ -121,7 +128,7 @@ class InventoryServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response()]);
 
-        $service = new RestInventoryService('inventory', $this->breaker);
+        $service = new RestInventoryService('inventory', $this->breaker, $this->tracer);
         $service->getEquipment('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
 
         Http::assertSent(function (Request $request) {

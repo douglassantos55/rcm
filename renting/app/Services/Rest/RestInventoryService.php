@@ -4,6 +4,7 @@ namespace App\Services\Rest;
 
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\InventoryService;
+use App\Services\Tracer;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -20,8 +21,14 @@ class RestInventoryService implements InventoryService
      */
     private $breaker;
 
-    public function __construct(string $serviceUrl, CircuitBreaker $breaker)
+    /**
+     * @var Tracer
+     */
+    private $tracer;
+
+    public function __construct(string $serviceUrl, CircuitBreaker $breaker, Tracer $tracer)
     {
+        $this->tracer = $tracer;
         $this->breaker = $breaker;
 
         $this->client = Http::baseUrl($serviceUrl)
@@ -32,16 +39,19 @@ class RestInventoryService implements InventoryService
     public function getEquipment(string $uuid): ?array
     {
         return $this->breaker->invoke(function () use ($uuid) {
-            $response = $this->client
-                ->withToken(request()->bearerToken())
-                ->get('/api/equipment/' . $uuid)
-                ->throwIfServerError();
+            return $this->tracer->trace(function ($context) use ($uuid) {
+                $response = $this->client
+                    ->withHeaders($context)
+                    ->withToken(request()->bearerToken())
+                    ->get('/api/equipment/' . $uuid)
+                    ->throwIfServerError();
 
-            if ($response->clientError()) {
-                return null;
-            }
+                if ($response->clientError()) {
+                    return null;
+                }
 
-            return $response->json();
+                return $response->json();
+            });
         }, self::NAME, self::MAX_ATTEMPTS);
     }
 
