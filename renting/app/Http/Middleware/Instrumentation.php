@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Metrics\Counter;
 use App\Metrics\Histogram;
 use App\Metrics\Registry;
+use App\Services\Tracer;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,8 +27,14 @@ class Instrumentation
      */
     private $memoryUsage;
 
-    public function __construct(Registry $registry)
+    /**
+     * @var Tracer
+     */
+    private $tracer;
+
+    public function __construct(Registry $registry, Tracer $tracer)
     {
+        $this->tracer = $tracer;
         $this->requestsCounter = $registry->getOrCreateCounter('total_requests', 'renting', ['status']);
         $this->requestDuration = $registry->getOrCreateHistogram('request_duration_seconds', 'renting', [], [1, 2, 3, 4, 5]);
         $this->memoryUsage = $registry->getOrCreateHistogram('memory_usage_mb', 'renting', [], [5, 10, 15, 20, 30, 50, 100]);
@@ -41,7 +48,7 @@ class Instrumentation
     public function handle(Request $request, Closure $next): Response
     {
         $start = time();
-        $response = $next($request);
+        $response = $this->tracer->trace(fn () => $next($request));
 
         $this->requestDuration->observe((time() - $start));
         $this->requestsCounter->increment([$response->status()]);
