@@ -25,6 +25,7 @@ services:
             - redis
             - mysql
             - mailpit
+            - zipkin
     redis:
         image: 'redis:alpine'
         ports:
@@ -81,6 +82,39 @@ services:
             - './prometheus.yml:/etc/prometheus/prometheus.yml'
         networks:
             - renting
+
+    storage:
+        container_name: zipkin_mysql
+        image: 'openzipkin/zipkin-mysql'
+        networks:
+            - renting
+
+    zipkin:
+        image: 'openzipkin/zipkin'
+        ports:
+            - '9411:9411'
+        environment:
+            STORAGE_TYPE: 'mysql'
+            MYSQL_HOST: 'zipkin_mysql'
+            MYSQL_USER: 'zipkin'
+            MYSQL_PASS: 'zipkin'
+        networks:
+            - renting
+        depends_on:
+            - storage
+
+    zipkin_dependencies:
+        image: 'openzipkin/zipkin-dependencies'
+        entrypoint: 'crond -f'
+        environment:
+            STORAGE_TYPE: 'mysql'
+            MYSQL_HOST: 'zipkin_mysql'
+            MYSQL_USER: 'zipkin'
+            MYSQL_PASS: 'zipkin'
+            ZIPKIN_LOG_LEVEL: 'DEBUG'
+        depends_on:
+            - storage
+
 networks:
     renting:
         driver: bridge

@@ -12,6 +12,8 @@ use App\Services\Registry\Registry;
 use App\Services\Rest\RestInventoryService;
 use App\Services\Rest\RestPaymentService;
 use App\Services\Rest\RestPricingService;
+use App\Services\Tracer;
+use App\Services\ZipkinTracer;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(Tracer::class, function () {
+            return new ZipkinTracer('renting', env('ZIPKIN_ADDR'));
+        });
+
         $this->app->singleton(PaymentService::class, function (Application $app) {
             $service = env('PAYMENT_SERVICE');
             $registry = $app->make(Registry::class);
