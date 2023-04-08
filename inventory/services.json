@@ -22,7 +22,7 @@
             "address": "http://renting",
             "check": {
                 "name": "renting-healthcheck",
-                "http": "http://renting/api/health-check",
+                "http": "http://renting/health-check",
                 "interval": "2s",
                 "timeout": "2s",
                 "status": "passing"

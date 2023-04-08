@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\RentController;
-use App\Http\Middleware\Instrumentation;
 use App\Metrics\Registry;
 use Illuminate\Support\Facades\Route;
 use Prometheus\RenderTextFormat;
@@ -18,12 +17,7 @@ use Prometheus\RenderTextFormat;
 |
 */
 
-Route::get('/health-check', function () {
-    return response()->json(['status' => 'healthy']);
-});
-
-
-Route::middleware(['auth', Instrumentation::class])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::apiResources([
         '/customers' => CustomerController::class,
         '/rents' => RentController::class,
