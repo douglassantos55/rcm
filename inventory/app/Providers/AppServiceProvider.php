@@ -8,6 +8,8 @@ use App\Services\PricingService;
 use App\Services\Registry\ConsulRegistry;
 use App\Services\Registry\Registry;
 use App\Services\Rest\RestPricingService;
+use App\Services\Tracing\Tracer;
+use App\Services\Tracing\ZipkinTracer;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Client\Response as ClientResponse;
@@ -32,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(Registry::class, function () {
             return new ConsulRegistry();
+        });
+
+        $this->app->singleton(Tracer::class, function () {
+            return new ZipkinTracer('inventory', env('ZIPKIN_ADDR'));
         });
 
         $this->app->bind(CircuitBreaker::class, function (Application $app) {
