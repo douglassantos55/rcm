@@ -8,7 +8,7 @@
             "port": 80,
             "check": {
                 "name": "inventory-healthcheck",
-                "http": "http://inventory/api/health-check",
+                "http": "http://inventory/health-check",
                 "interval": "5m",
                 "timeout": "1s",
                 "status": "passing"

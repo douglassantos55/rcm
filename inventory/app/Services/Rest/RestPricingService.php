@@ -51,7 +51,7 @@ class RestPricingService implements PricingService
         }, self::NAME, self::MAX_ATTEMPTS);
 
         if (is_null($response)) {
-            return response('could not reach renting service', 500);
+            throw new \RuntimeException('could not reach pricing service');
         }
 
         return $response;

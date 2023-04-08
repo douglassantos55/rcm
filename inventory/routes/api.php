@@ -2,9 +2,8 @@
 
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\SupplierController;
-use App\Http\Middleware\Instrumentation;
-use App\Metrics\Registry;
 use Illuminate\Support\Facades\Route;
+use App\Metrics\Registry;
 use Prometheus\RenderTextFormat;
 
 /*
@@ -18,11 +17,8 @@ use Prometheus\RenderTextFormat;
 |
 */
 
-Route::get('/health-check', function () {
-    return response()->json(['status' => 'healthy']);
-});
 
-Route::middleware(['auth', Instrumentation::class])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::apiResources([
         '/equipment' => EquipmentController::class,
         '/suppliers' => SupplierController::class,
