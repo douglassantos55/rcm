@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Tracing;
 
+use Closure;
+use Symfony\Component\HttpFoundation\Response;
 use Zipkin\Endpoint;
 use Zipkin\Propagation\Map;
 use Zipkin\Propagation\SamplingFlags;
@@ -34,16 +36,28 @@ class ZipkinTracer implements Tracer
             ->build();
     }
 
-    public function trace(callable $callback): mixed
+    public function trace(string $name, Closure $callback): mixed
     {
         $span = $this->getSpan();
 
         $span->start();
-        $result = $callback($this->getContext());
+        $span->setName($name);
+
+        $response = $callback($this->getContext());
+
+        if ($response instanceof Response) {
+            $span->tag(\Zipkin\Tags\HTTP_STATUS_CODE, (string) $response->getStatusCode());
+
+            if ($response->isServerError() && !is_null($response->exception)) {
+                $span->setError(new \Exception($response->exception->getMessage()));
+            }
+        }
+
         $span->finish();
 
         register_shutdown_function(fn () => $this->tracing->getTracer()->flush());
-        return $result;
+
+        return $response;
     }
 
     private function getSpan(): Span
@@ -54,11 +68,13 @@ class ZipkinTracer implements Tracer
         if (is_null($current)) {
             $span = $tracer->nextSpan($this->getRequestContext());
             $span->setKind(\Zipkin\Kind\SERVER);
+            $span->annotate(\Zipkin\Annotations\WIRE_RECV);
 
             $this->root = $span;
         } else {
             $span = $tracer->newChild($current->getContext());
             $span->setKind(\Zipkin\Kind\CLIENT);
+            $span->annotate(\Zipkin\Annotations\WIRE_SEND);
         }
 
         return $span;

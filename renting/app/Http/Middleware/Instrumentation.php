@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use App\Metrics\Counter;
 use App\Metrics\Histogram;
 use App\Metrics\Registry;
-use App\Services\Tracer;
+use App\Services\Tracing\Tracer;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,7 +48,11 @@ class Instrumentation
     public function handle(Request $request, Closure $next): Response
     {
         $start = time();
-        $response = $this->tracer->trace(fn () => $next($request));
+
+        $response = $this->tracer->trace(
+            $request->route()->getName(),
+            fn () => $next($request)
+        );
 
         $this->requestDuration->observe((time() - $start));
         $this->requestsCounter->increment([$response->status()]);

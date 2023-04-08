@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\ZipkinTracer;
+use App\Services\Tracing\ZipkinTracer;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -13,7 +13,7 @@ class ZipkinTest extends TestCase
         Http::fake(['*' => Http::response()]);
         $renting = new ZipkinTracer('renting', 'http://zipkin:9411/api/v2/spans');
 
-        $result = $renting->trace(function () {
+        $result = $renting->trace('test_callback', function () {
             sleep(1);
             return 'foobar';
         });
@@ -36,16 +36,16 @@ class ZipkinTest extends TestCase
 
                 $inventory = new ZipkinTracer('inventory', 'zipkin/api/v2/spans');
 
-                return $inventory->trace(function () {
+                return $inventory->trace('test_inventory', function () {
                     sleep(2);
                     return Http::response('hello from inventory');
                 });
             },
         ]);
 
-        $result = $tracer->trace(function () use ($tracer) {
+        $result = $tracer->trace('test_multiple_services', function () use ($tracer) {
             sleep(1);
-            return $tracer->trace(fn () => Http::get('inventory'));
+            return $tracer->trace('test_invoke_inventory', fn () => Http::get('inventory'));
         });
 
         $this->assertEquals('hello from inventory', $result->body());

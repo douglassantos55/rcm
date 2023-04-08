@@ -12,8 +12,8 @@ use App\Services\Registry\Registry;
 use App\Services\Rest\RestInventoryService;
 use App\Services\Rest\RestPaymentService;
 use App\Services\Rest\RestPricingService;
-use App\Services\Tracer;
-use App\Services\ZipkinTracer;
+use App\Services\Tracing\Tracer;
+use App\Services\Tracing\ZipkinTracer;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 

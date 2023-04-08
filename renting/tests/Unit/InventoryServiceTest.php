@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\CircuitBreaker\RateLimitBreaker;
 use App\Services\Rest\RestInventoryService;
-use App\Services\Tracer;
+use App\Services\Tracing\Tracer;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Client\Request;
 use Illuminate\Log\Logger;
