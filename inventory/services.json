@@ -50,7 +50,7 @@
             "address": "http://pricing",
             "check": {
                 "name": "pricing-healthcheck",
-                "http": "http://pricing/api/health-check",
+                "http": "http://pricing/health-check",
                 "interval": "5m",
                 "timeout": "1s",
                 "status": "passing"

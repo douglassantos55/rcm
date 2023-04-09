@@ -18,11 +18,7 @@ use Prometheus\RenderTextFormat;
 |
 */
 
-Route::get('/health-check', function () {
-    return response()->json(['status' => 'healthy']);
-});
-
-Route::middleware(['auth', Instrumentation::class])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::apiResource('/periods', PeriodController::class);
 
     Route::controller(RentingValueController::class)->group(function () {
