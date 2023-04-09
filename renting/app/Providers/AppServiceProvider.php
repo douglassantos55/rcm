@@ -54,8 +54,9 @@ class AppServiceProvider extends ServiceProvider
             $service = env('PRICING_SERVICE');
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
+            $tracer = $app->make(Tracer::class);
 
-            return new RestPricingService($registry->get($service), $breaker);
+            return new RestPricingService($registry->get($service), $breaker, $tracer);
         });
     }
 

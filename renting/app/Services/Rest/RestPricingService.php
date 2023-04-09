@@ -4,6 +4,7 @@ namespace App\Services\Rest;
 
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\PricingService;
+use App\Services\Tracing\Tracer;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -22,8 +23,15 @@ class RestPricingService implements PricingService
      */
     private $breaker;
 
-    public function __construct(string $service, CircuitBreaker $breaker)
+
+    /**
+     * @var Tracer
+     */
+    private $tracer;
+
+    public function __construct(string $service, CircuitBreaker $breaker, Tracer $tracer)
     {
+        $this->tracer = $tracer;
         $this->breaker = $breaker;
 
         $this->client = Http::baseUrl($service)
@@ -34,10 +42,13 @@ class RestPricingService implements PricingService
     public function getPeriod(string $identifier): ?array
     {
         return $this->breaker->invoke(function () use ($identifier) {
-            $response = $this->client
-                ->withToken(request()->bearerToken())
-                ->get('/api/periods/' . $identifier)
-                ->throwIfServerError();
+            $response = $this->tracer->trace('pricing:get_period', function (array $context) use ($identifier) {
+                return $this->client
+                    ->withHeaders($context)
+                    ->withToken(request()->bearerToken())
+                    ->get('/api/periods/' . $identifier)
+                    ->throwIfServerError();
+            });
 
             if ($response->clientError()) {
                 return null;
