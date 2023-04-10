@@ -7,7 +7,7 @@ use App\Services\CircuitBreaker\RateLimitBreaker;
 use App\Services\InventoryService;
 use App\Services\PaymentService;
 use App\Services\PricingService;
-use App\Services\Registry\ConsulRegistry;
+use App\Services\Registry\HttpConsulRegistry;
 use App\Services\Registry\Registry;
 use App\Services\Rest\RestInventoryService;
 use App\Services\Rest\RestPaymentService;
@@ -21,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
 {
     public $singletons = [
         CircuitBreaker::class => RateLimitBreaker::class,
-        Registry::class => ConsulRegistry::class,
     ];
 
     /**
@@ -31,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(Tracer::class, function () {
             return new ZipkinTracer('renting', env('ZIPKIN_ADDR'));
+        });
+
+        $this->app->singleton(Registry::class, function () {
+            return new HttpConsulRegistry(env('CONSUL_HTTP_ADDR'));
         });
 
         $this->app->singleton(PaymentService::class, function (Application $app) {
