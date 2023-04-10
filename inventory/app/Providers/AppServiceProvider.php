@@ -5,7 +5,7 @@ namespace App\Providers;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\CircuitBreaker\RateLimitBreaker;
 use App\Services\PricingService;
-use App\Services\Registry\ConsulRegistry;
+use App\Services\Registry\HttpConsulRegistry;
 use App\Services\Registry\Registry;
 use App\Services\Rest\RestPricingService;
 use App\Services\Tracing\Tracer;
@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(Registry::class, function () {
-            return new ConsulRegistry();
+            return new HttpConsulRegistry(env('CONSUL_HTTP_ADDR'));
         });
 
         $this->app->singleton(Tracer::class, function () {

@@ -560,7 +560,7 @@ class EquipmentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         $response->assertServerError();
-        $response->assertContent('could not reach renting service');
+        $response->assertContent('could not reach pricing service');
 
         Http::assertNothingSent();
         $this->assertNull(Equipment::firstWhere('description', 'Exception'));
@@ -638,7 +638,7 @@ class EquipmentTest extends TestCase
 
         Http::assertSentCount(5);
         $response->assertServerError();
-        $response->assertContent('could not reach renting service');
+        $response->assertContent('could not reach pricing service');
     }
 
     public function test_create_values_reset()
@@ -701,7 +701,7 @@ class EquipmentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         $response->assertServerError();
-        $response->assertContent('could not reach renting service');
+        $response->assertContent('could not reach pricing service');
 
         Http::assertNothingSent();
         $this->assertEquals('Test', $equipment->refresh()->description);
@@ -775,7 +775,7 @@ class EquipmentTest extends TestCase
 
         Http::assertNothingSent();
         $response->assertServerError();
-        $response->assertContent('could not reach renting service');
+        $response->assertContent('could not reach pricing service');
 
         $this->assertEquals('Test', $equipment->refresh()->description);
     }
