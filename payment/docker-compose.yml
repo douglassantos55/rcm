@@ -21,6 +21,8 @@ services:
       JWT_TOKEN_SECRET: '${JWT_TOKEN_SECRET}'
       JWT_TOKEN_ISSUER: '${JWT_TOKEN_ISSUER}'
       JWT_TOKEN_AUDIENCE: '${JWT_TOKEN_AUDIENCE}'
+      APP_NAME: '${APP_NAME:-payment}'
+      ZIPKIN_URL: '${ZIPKIN_URL:-http://127.0.0.1:9411}'
 
   mysql:
     image: 'mysql/mysql-server:8.0'
