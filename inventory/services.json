@@ -4,7 +4,7 @@
             "id": "inventory",
             "name": "inventory",
             "tags": ["v1"],
-            "address": "http://inventory",
+            "address": "inventory",
             "port": 80,
             "check": {
                 "name": "inventory-healthcheck",
@@ -19,7 +19,7 @@
             "name": "renting",
             "port": 80,
             "tags": ["v1"],
-            "address": "http://renting",
+            "address": "renting",
             "check": {
                 "name": "renting-healthcheck",
                 "http": "http://renting/health-check",
@@ -33,7 +33,7 @@
             "name": "payment",
             "port": 80,
             "tags": ["v1"],
-            "address": "http://payment",
+            "address": "payment",
             "check": {
                 "name": "payment-healthcheck",
                 "http": "http://payment/health",
@@ -47,7 +47,7 @@
             "name": "pricing",
             "port": 80,
             "tags": ["v1"],
-            "address": "http://pricing",
+            "address": "pricing",
             "check": {
                 "name": "pricing-healthcheck",
                 "http": "http://pricing/health-check",
