@@ -20,4 +20,3 @@ Route::get('/', function () {
 Route::get('/health-check', function () {
     return response()->json(['status' => 'healthy']);
 });
-

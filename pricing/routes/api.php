@@ -3,8 +3,8 @@
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\RentingValueController;
 use App\Http\Middleware\Instrumentation;
-use App\Metrics\Registry;
 use Illuminate\Support\Facades\Route;
+use App\Metrics\Registry;
 use Prometheus\RenderTextFormat;
 
 /*
@@ -30,5 +30,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/metrics', function (Registry $registry) {
         $renderer = new RenderTextFormat();
         return $renderer->render($registry->getMetrics());
-    });
+    })->name('metrics')->withoutMiddleware(Instrumentation::class);
 });
