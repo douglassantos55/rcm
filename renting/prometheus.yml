@@ -8,21 +8,21 @@ scrape_configs:
       - targets: ['localhost:9090']
 
   - job_name: renting
-    metrics_path: /api/metrics
+    metrics_path: /metrics
     authorization:
       credentials_file: secret
     static_configs:
       - targets: ['renting']
 
   - job_name: inventory
-    metrics_path: /api/metrics
+    metrics_path: /metrics
     authorization:
       credentials_file: secret
     static_configs:
       - targets: ['inventory']
 
   - job_name: pricing
-    metrics_path: /api/metrics
+    metrics_path: /metrics
     authorization:
       credentials_file: secret
     static_configs:
