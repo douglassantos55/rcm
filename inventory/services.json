@@ -36,7 +36,7 @@
             "address": "payment",
             "check": {
                 "name": "payment-healthcheck",
-                "http": "http://payment/health",
+                "http": "http://payment/actuator/health",
                 "interval": "5m",
                 "timeout": "2s",
                 "status": "passing"
