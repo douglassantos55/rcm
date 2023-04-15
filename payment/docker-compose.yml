@@ -6,7 +6,7 @@ services:
     working_dir: '/app'
     networks:
       - payment
-      - renting_renting
+      - reconcip-microservices_infra
     volumes:
       - '.:/app'
     command: ["./gradlew", "bootRun"]
@@ -38,7 +38,7 @@ services:
 networks:
   payment:
     driver: bridge
-  renting_renting:
+  reconcip-microservices_infra:
     external: true
 
 volumes:

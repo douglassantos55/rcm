@@ -21,7 +21,7 @@ services:
             - '.:/var/www/html'
         networks:
             - pricing
-            - renting_renting
+            - reconcip-microservices_infra
         depends_on:
             - mysql
     mysql:
@@ -51,7 +51,7 @@ services:
 networks:
     pricing:
         driver: bridge
-    renting_renting:
+    reconcip-microservices_infra:
         external: true
 volumes:
     sail-mysql:

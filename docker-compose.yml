@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+    consul:
+        image: 'consul'
+        ports:
+            - '8500:8500'
+        volumes:
+            - './services.json:/consul/config/services.json'
+        networks:
+            - infra
+
+    redis:
+        image: 'redis:alpine'
+        ports:
+            - '${FORWARD_REDIS_PORT:-6379}:6379'
+        volumes:
+            - 'sail-redis:/data'
+        networks:
+            - infra
+        healthcheck:
+            test:
+                - CMD
+                - redis-cli
+                - ping
+            retries: 3
+            timeout: 5s
+
+    prometheus:
+        image: 'prom/prometheus'
+        ports:
+            - '9090:9090'
+        volumes:
+            - '.secret:/etc/prometheus/secret'
+            - './prometheus.yml:/etc/prometheus/prometheus.yml'
+        networks:
+            - infra
+
+    storage:
+        container_name: zipkin_mysql
+        image: 'openzipkin/zipkin-mysql'
+        networks:
+            - infra
+
+    zipkin:
+        image: 'openzipkin/zipkin'
+        ports:
+            - '9411:9411'
+        environment:
+            STORAGE_TYPE: 'mysql'
+            MYSQL_HOST: 'zipkin_mysql'
+            MYSQL_USER: 'zipkin'
+            MYSQL_PASS: 'zipkin'
+        networks:
+            - infra
+        depends_on:
+            - storage
+
+    zipkin_dependencies:
+        image: 'openzipkin/zipkin-dependencies'
+        entrypoint: 'crond -f'
+        environment:
+            STORAGE_TYPE: 'mysql'
+            MYSQL_HOST: 'zipkin_mysql'
+            MYSQL_USER: 'zipkin'
+            MYSQL_PASS: 'zipkin'
+            ZIPKIN_LOG_LEVEL: 'DEBUG'
+        depends_on:
+            - storage
+
+networks:
+    infra:
+        driver: bridge
+
+volumes:
+    sail-redis:
+        driver: local
