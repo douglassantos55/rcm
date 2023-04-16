@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Balancer\Balancer;
+use App\Services\Balancer\RoundRobinBalancer;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\CircuitBreaker\RateLimitBreaker;
 use App\Services\PricingService;
@@ -11,6 +13,7 @@ use App\Services\Rest\RestPricingService;
 use App\Services\Tracing\Tracer;
 use App\Services\Tracing\ZipkinTracer;
 use Illuminate\Cache\RateLimiter;
+use Illuminate\Cache\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Log\Logger;
@@ -25,16 +28,15 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(PricingService::class, function (Application $app) {
-            $service = env('PRICING_SERVICE');
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
+            $balancer = $app->make(Balancer::class);
             $tracer = $app->make(Tracer::class);
 
-            return new RestPricingService($registry->get($service), $breaker, $tracer);
-        });
+            $service = env('PRICING_SERVICE');
+            $instance = $balancer->get($registry->get($service));
 
-        $this->app->singleton(Registry::class, function () {
-            return new HttpConsulRegistry(env('CONSUL_HTTP_ADDR'));
+            return new RestPricingService($instance, $breaker, $tracer);
         });
 
         $this->app->singleton(Tracer::class, function () {
@@ -46,6 +48,14 @@ class AppServiceProvider extends ServiceProvider
             $logger = $app->make(Logger::class);
 
             return new RateLimitBreaker($limiter, $logger);
+        });
+
+        $this->app->singleton(Registry::class, function () {
+            return new HttpConsulRegistry(env('CONSUL_HTTP_ADDR'));
+        });
+
+        $this->app->singleton(Balancer::class, function (Application $app) {
+            return new RoundRobinBalancer($app->make(Repository::class));
         });
     }
 

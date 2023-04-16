@@ -23,7 +23,7 @@ class EquipmentTest extends TestCase
         parent::setUp();
 
         $this->partialMock(Registry::class, function (MockInterface $mock) {
-            $mock->shouldReceive('get')->andReturn('pricing');
+            $mock->shouldReceive('get')->andReturn(['pricing']);
         });
     }
 
