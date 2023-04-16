@@ -52,7 +52,7 @@ class HttpConsulRegistryTest extends TestCase
         $this->assertThrows(fn () => $registry->get('inventory'));
     }
 
-    public function test_get_passing_status()
+    public function test_get_single_passing()
     {
         Http::fake([
             'consul/*' => Http::response([
@@ -66,6 +66,34 @@ class HttpConsulRegistryTest extends TestCase
         ]);
 
         $registry = new HttpConsulRegistry('consul');
-        $this->assertEquals('127.0.0.1:8000', $registry->get('inventory'));
+        $this->assertEquals(['127.0.0.1:8000'], $registry->get('inventory'));
+    }
+
+    public function test_get_multiple_passing()
+    {
+        Http::fake([
+            'consul/*' => Http::response([
+                [
+                    'AggregatedStatus' => 'passing',
+                    'Service' => ['Address' => '127.0.0.1:8000'],
+                ],
+                [
+                    'AggregatedStatus' => 'passing',
+                    'Service' => ['Address' => '127.0.0.1:8001'],
+                ],
+                [
+                    'AggregatedStatus' => 'passing',
+                    'Service' => ['Address' => '127.0.0.1:8002'],
+                ],
+                ['AggregatedStatus' => 'warning'],
+            ]),
+        ]);
+
+        $registry = new HttpConsulRegistry('consul');
+
+        $this->assertEquals(
+            ['127.0.0.1:8000', '127.0.0.1:8001', '127.0.0.1:8002'],
+            $registry->get('inventory')
+        );
     }
 }

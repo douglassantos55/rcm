@@ -9,7 +9,7 @@ interface Registry
      *
      * @param string $service The name of the service to look for
      *
-     * @return string The address of the service
+     * @return array The available instances for the service
      */
-    public function get(string $service): string;
+    public function get(string $service): array;
 }

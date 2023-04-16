@@ -22,20 +22,26 @@ class HttpConsulRegistry implements Registry
             ->acceptJson();
     }
 
-    public function get(string $service): string
+    public function get(string $service): array
     {
         try {
             $response = $this->client->get('/v1/agent/health/service/name/' . $service)
                 ->throw()
                 ->json();
 
+            $instances = [];
+
             foreach ($response as $service) {
                 if ($service['AggregatedStatus'] === 'passing') {
-                    return $service['Service']['Address'];
+                    $instances[] = $service['Service']['Address'];
                 }
             }
 
-            throw new \Exception("service is not healthy");
+            if (empty($instances)) {
+                throw new \Exception("service is not healthy");
+            }
+
+            return $instances;
         } catch (\Exception | RequestException $ex) {
             Log::error('could not get service', [
                 'error' => $ex->getMessage(),

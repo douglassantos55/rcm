@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Balancer\Balancer;
+use App\Services\Balancer\RoundRobinBalancer;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\CircuitBreaker\RateLimitBreaker;
 use App\Services\InventoryService;
@@ -14,6 +16,7 @@ use App\Services\Rest\RestPaymentService;
 use App\Services\Rest\RestPricingService;
 use App\Services\Tracing\Tracer;
 use App\Services\Tracing\ZipkinTracer;
+use Illuminate\Cache\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,30 +39,43 @@ class AppServiceProvider extends ServiceProvider
             return new HttpConsulRegistry(env('CONSUL_HTTP_ADDR'));
         });
 
+        $this->app->singleton(Balancer::class, function (Application $app) {
+            return new RoundRobinBalancer($app->make(Repository::class));
+        });
+
         $this->app->singleton(PaymentService::class, function (Application $app) {
-            $service = env('PAYMENT_SERVICE');
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
+            $balancer = $app->make(Balancer::class);
 
-            return new RestPaymentService($registry->get($service), $breaker);
+            $service = env('PAYMENT_SERVICE');
+            $instance = $balancer->get($registry->get($service));
+
+            return new RestPaymentService($instance, $breaker);
         });
 
         $this->app->singleton(InventoryService::class, function (Application $app) {
-            $service = env('INVENTORY_SERVICE');
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
             $tracer = $app->make(Tracer::class);
+            $balancer = $app->make(Balancer::class);
 
-            return new RestInventoryService($registry->get($service), $breaker, $tracer);
+            $service = env('INVENTORY_SERVICE');
+            $instance = $balancer->get($registry->get($service));
+
+            return new RestInventoryService($instance, $breaker, $tracer);
         });
 
         $this->app->singleton(PricingService::class, function (Application $app) {
-            $service = env('PRICING_SERVICE');
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
             $tracer = $app->make(Tracer::class);
+            $balancer = $app->make(Balancer::class);
 
-            return new RestPricingService($registry->get($service), $breaker, $tracer);
+            $service = env('PRICING_SERVICE');
+            $instance = $balancer->get($registry->get($service));
+
+            return new RestPricingService($instance, $breaker, $tracer);
         });
     }
 

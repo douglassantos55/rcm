@@ -18,7 +18,7 @@ class ItemTest extends TestCase
         parent::setUp();
 
         $this->partialMock(Registry::class, function (MockInterface $mock) {
-            $mock->shouldReceive('get')->andReturn('inventory');
+            $mock->shouldReceive('get')->andReturn(['inventory']);
         });
     }
 
