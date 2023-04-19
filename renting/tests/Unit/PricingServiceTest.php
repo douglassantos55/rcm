@@ -58,8 +58,8 @@ class PricingServiceTest extends TestCase
         $uuid = '04fedb8b-87c3-44a0-9b42-b4043a7afe8a';
 
         Http::fake([
-            'pricing/api/periods/' . $uuid => Http::response(['foo' => 'bar']),
-            'pricing/api/periods/*' => Http::response(['foo' => 'check'], 404),
+            'pricing/periods/' . $uuid => Http::response(['foo' => 'bar']),
+            'pricing/periods/*' => Http::response(['foo' => 'check'], 404),
         ]);
 
         $service = new RestPricingService('pricing', $this->breaker, $this->tracer);
@@ -114,8 +114,8 @@ class PricingServiceTest extends TestCase
         $uuid = '04fedb8b-87c3-44a0-9b42-b4043a7afe8a';
 
         Http::fake([
-            'pricing/api/periods/' . $uuid => Http::response(['foo' => 'ok']),
-            'pricing/api/periods/*' => Http::response(null, 500),
+            'pricing/periods/' . $uuid => Http::response(['foo' => 'ok']),
+            'pricing/periods/*' => Http::response(null, 500),
         ]);
 
         $service = new RestPricingService('pricing', $this->breaker, $this->tracer);

@@ -440,10 +440,10 @@ class RentTest extends TestCase
         Http::fake([
             'payment/*' => Http::response(['foo' => 'baz']),
             'pricing/*' => Http::response(['foo' => 'baz']),
-            'inventory/api/equipment/3272' => Http::response([
+            'inventory/equipment/3272' => Http::response([
                 'rent_value' => '0.3', 'unit_value' => '250'
             ]),
-            'inventory/api/equipment/3030' => Http::response([
+            'inventory/equipment/3030' => Http::response([
                 'rent_value' => '0.75', 'unit_value' => '150'
             ]),
         ]);

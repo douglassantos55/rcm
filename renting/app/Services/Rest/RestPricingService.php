@@ -46,7 +46,7 @@ class RestPricingService implements PricingService
                 return $this->client
                     ->withHeaders($context)
                     ->withToken(request()->bearerToken())
-                    ->get('/api/periods/' . $identifier)
+                    ->get('/periods/' . $identifier)
                     ->throwIfServerError();
             });
 
@@ -60,7 +60,7 @@ class RestPricingService implements PricingService
 
     public function getRentingValues(string $equipment): ?array
     {
-        return $this->client->get('/api/renting-values', [
+        return $this->client->get('/renting-values', [
             'equipment' => $equipment
         ])->json();
     }

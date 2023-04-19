@@ -120,8 +120,8 @@ class InventoryServiceTest extends TestCase
         $uuid = 'ce283991-b0fb-4ea9-8286-f79157dfd3c1';
 
         Http::fake([
-            'inventory/api/equipment/' . $uuid => Http::response(),
-            'inventory/api/equipment/aoeu' => Http::response(null, 500),
+            'inventory/equipment/' . $uuid => Http::response(),
+            'inventory/equipment/aoeu' => Http::response(null, 500),
         ]);
 
         $service = new RestInventoryService('inventory', $this->breaker, $this->tracer, $this->cache);
