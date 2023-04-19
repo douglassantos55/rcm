@@ -22,6 +22,8 @@ class Item extends Model
         'equipment_id',
     ];
 
+    protected $appends = ['equipment'];
+
     public static function booted(): void
     {
         self::saving(function (Item $item) {

@@ -17,6 +17,7 @@ use App\Services\Rest\RestPricingService;
 use App\Services\Tracing\Tracer;
 use App\Services\Tracing\ZipkinTracer;
 use Illuminate\Cache\Repository;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
@@ -59,11 +60,12 @@ class AppServiceProvider extends ServiceProvider
             $breaker = $app->make(CircuitBreaker::class);
             $tracer = $app->make(Tracer::class);
             $balancer = $app->make(Balancer::class);
+            $cache = $app->make(CacheRepository::class);
 
             $service = env('INVENTORY_SERVICE');
             $instance = $balancer->get($registry->get($service));
 
-            return new RestInventoryService($instance, $breaker, $tracer);
+            return new RestInventoryService($instance, $breaker, $tracer, $cache);
         });
 
         $this->app->singleton(PricingService::class, function (Application $app) {

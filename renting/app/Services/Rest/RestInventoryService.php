@@ -5,6 +5,7 @@ namespace App\Services\Rest;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\InventoryService;
 use App\Services\Tracing\Tracer;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -26,8 +27,14 @@ class RestInventoryService implements InventoryService
      */
     private $tracer;
 
-    public function __construct(string $serviceUrl, CircuitBreaker $breaker, Tracer $tracer)
+    /**
+     * @var Repository
+     */
+    private $cache;
+
+    public function __construct(string $serviceUrl, CircuitBreaker $breaker, Tracer $tracer, Repository $cache)
     {
+        $this->cache = $cache;
         $this->tracer = $tracer;
         $this->breaker = $breaker;
 
@@ -36,27 +43,87 @@ class RestInventoryService implements InventoryService
             ->accept('application/json');
     }
 
-    public function getEquipment(string $uuid): ?array
+    public function getEquipment(mixed $uuid): ?array
     {
+        $cached = $this->getFromCache($uuid);
+
+        if (!is_null($cached)) {
+            return $cached;
+        }
+
         return $this->breaker->invoke(function () use ($uuid) {
             $response = $this->tracer->trace('inventory.get_equipment', function ($context) use ($uuid) {
-                return $this->client
-                    ->withHeaders($context)
-                    ->withToken(request()->bearerToken())
-                    ->get('/api/equipment/' . $uuid)
-                    ->throwIfServerError();
+                if (is_array($uuid)) {
+                    return $this->getMultiple($uuid, $context);
+                }
+
+                return $this->getSingle($uuid, $context);
             });
 
             if ($response->clientError()) {
                 return null;
             }
 
-            return $response->json();
+            $items = $response->json();
+
+            if (!is_array($uuid)) {
+                $this->cache->put($uuid, $items, now()->addSeconds(5));
+            } else {
+                foreach ($items as $item) {
+                    $this->cache->put($item['id'], $item, now()->addSeconds(5));
+                }
+            }
+
+            return $items;
         }, self::NAME, self::MAX_ATTEMPTS);
     }
 
     public function has(string $entity, string $identifier): bool
     {
         return boolval($this->getEquipment($identifier));
+    }
+
+    private function getFromCache(mixed $uuid): ?array
+    {
+        if (is_array($uuid)) {
+            $items = array_filter((array) $this->cache->getMultiple($uuid), 'is_array');
+
+            if (!empty($items)) {
+                $missing = array_diff($uuid, array_keys($items));
+
+                if (!empty($missing)) {
+                    $items = array_merge($items, $this->getEquipment($missing));
+                }
+
+                return $items;
+            }
+
+            return null;
+        }
+
+        return $this->cache->get($uuid);
+    }
+
+    private function getSingle(string $uuid, array $context = [])
+    {
+        return $this->request($context)
+            ->get('/equipment/' . $uuid)
+            ->throwIfServerError();
+    }
+
+    private function getMultiple(array $uuids, array $context = [])
+    {
+        $query = http_build_query(['uuids' => join(',', $uuids)]);
+
+        return $this->request($context)
+            ->get('/equipment?' . $query)
+            ->throwIfServerError();
+    }
+
+    private function request(array $context = [])
+    {
+        return $this->client
+            ->withHeaders($context)
+            ->withToken(request()->bearerToken());
     }
 }

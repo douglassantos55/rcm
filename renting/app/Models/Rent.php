@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\InventoryService;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,6 +35,19 @@ class Rent extends Model
     ];
 
     protected $with = ['items'];
+
+    protected static function booted(): void
+    {
+        static::retrieved(function (Rent $rent) {
+            /** @var InventoryService */
+            $service = app()->make(InventoryService::class);
+            $items = $rent->items->pluck('equipment_id')->all();
+
+            if (!empty($items)) {
+                $service->getEquipment($items);
+            }
+        });
+    }
 
     public function items(): HasMany
     {
