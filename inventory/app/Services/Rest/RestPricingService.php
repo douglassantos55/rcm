@@ -43,7 +43,7 @@ class RestPricingService implements PricingService
                     ->timeout(2)
                     ->withHeaders($context)
                     ->withToken(request()->bearerToken())
-                    ->post('/api/renting-values', ['values' => $values])
+                    ->post('/renting-values', ['values' => $values])
                     ->throwIfServerError();
 
                 return response()->fromClient($response);
@@ -65,7 +65,7 @@ class RestPricingService implements PricingService
                     ->timeout(2)
                     ->withHeaders($context)
                     ->withToken(request()->bearerToken())
-                    ->put('/api/renting-values', ['values' => $values])
+                    ->put('/renting-values', ['values' => $values])
                     ->throwIfServerError();
 
                 return response()->fromClient($response);
