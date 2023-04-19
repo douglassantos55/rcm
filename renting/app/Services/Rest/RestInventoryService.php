@@ -86,19 +86,21 @@ class RestInventoryService implements InventoryService
     private function getFromCache(mixed $uuid): ?array
     {
         if (is_array($uuid)) {
-            $items = array_filter((array) $this->cache->getMultiple($uuid), 'is_array');
+            $items = array_filter(array_map(fn ($id) => $this->cache->get($id), $uuid), 'is_array');
 
-            if (!empty($items)) {
+            if (empty($items)) {
+                return null;
+            }
+
+            if (count($items) !== count($uuid)) {
                 $missing = array_diff($uuid, array_keys($items));
 
                 if (!empty($missing)) {
                     $items = array_merge($items, $this->getEquipment($missing));
                 }
-
-                return $items;
             }
 
-            return null;
+            return $items;
         }
 
         return $this->cache->get($uuid);
