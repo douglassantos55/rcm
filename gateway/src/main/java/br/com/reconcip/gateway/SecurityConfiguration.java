@@ -52,9 +52,9 @@ public class SecurityConfiguration {
         return http
                 .authorizeExchange()
                 .anyExchange()
-                .authenticated()
-                .and()
+                .authenticated().and()
                 .oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::jwt)
+                .cors().and()
                 .build();
     }
 }
