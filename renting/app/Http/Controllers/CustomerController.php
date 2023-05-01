@@ -20,7 +20,7 @@ class CustomerController extends Controller
      */
     public function store(CustomerRequest $request)
     {
-        return Customer::create($request->validated())->refresh();
+        return Customer::create($request->input())->refresh();
     }
 
     /**
@@ -36,7 +36,7 @@ class CustomerController extends Controller
      */
     public function update(CustomerRequest $request, Customer $customer)
     {
-        $customer->update($request->validated());
+        $customer->update($request->input());
         return $customer;
     }
 
