@@ -24,7 +24,7 @@ class RentController extends Controller
             $rents->where('customer_id', $request->query('customer'));
         }
 
-        return $rents->paginate(50);
+        return $rents->paginate($request->query('per_page', 50));
     }
 
     /**

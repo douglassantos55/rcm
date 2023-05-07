@@ -639,6 +639,28 @@ class RentTest extends TestCase
         $response->assertJsonCount(50, 'data');
     }
 
+    public function test_list_paginates_per_page()
+    {
+        Rent::factory()->count(100)->create();
+
+        $response = $this->get(route('rents.index', ['per_page' => 100]), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(100, 'data');
+    }
+
+    public function test_list_paginates_per_page_over_limit()
+    {
+        Rent::factory()->count(100)->create();
+
+        $response = $this->get(route('rents.index', ['per_page' => 150]), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(100, 'data');
+    }
+
     public function test_list_filter_by_customer()
     {
         $customer = Customer::factory()->create();
