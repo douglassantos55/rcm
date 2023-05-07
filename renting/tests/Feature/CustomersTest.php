@@ -77,10 +77,14 @@ class CustomersTest extends TestCase
     {
         $response = $this->post(route('customers.store'), [
             'name' => 'Joaquim',
+            'observations' => 'Testing creation',
         ], ['accept' => 'application/json']);
 
         $response->assertCreated();
-        $this->assertModelExists(Customer::where('name', 'Joaquim')->first());
+        $customer = Customer::where('name', 'Joaquim')->first();
+
+        $this->assertModelExists($customer);
+        $this->assertEquals('Testing creation', $customer->observations);
     }
 
     /**
@@ -224,12 +228,14 @@ class CustomersTest extends TestCase
         $this->put(route('customers.update', $customer->id), [
             'name' => 'Jon',
             'cpf_cnpj' => '297.164.260-70',
+            'observations' => 'Foobar',
         ], ['accept' => 'application/json']);
 
         $customer->refresh();
 
         $this->assertEquals('Jon', $customer->name);
         $this->assertEquals('297.164.260-70', $customer->cpf_cnpj);
+        $this->assertEquals('Foobar', $customer->observations);
     }
 
     /**
