@@ -375,7 +375,89 @@ class CustomersTest extends TestCase
             'accept' => 'application/json',
         ]);
 
-        $response->assertJsonCount(50, 'data');
+        $response->assertJsonCount(50, 'items');
+        $response->assertJsonPath('total', 500);
+    }
+
+    public function test_filter_by_name()
+    {
+        Customer::factory()->count(100)->create();
+        Customer::factory()->create(['name' => 'John Doe']);
+        Customer::factory()->create(['name' => 'Jane Doe']);
+        Customer::factory()->create(['name' => 'Kevin Heart']);
+
+        $response = $this->get(route('customers.index', ['name' => 'doe']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(2, 'items');
+        $response->assertJsonPath('total', 2);
+    }
+
+    public function test_filter_by_cpf()
+    {
+        Customer::factory()->count(100)->create();
+        Customer::factory()->create(['cpf_cnpj' => '153.254.614-12']);
+        Customer::factory()->create(['cpf_cnpj' => '553.683.155-30']);
+
+        $response = $this->get(route('customers.index', ['cpf_cnpj' => '553.6']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(1, 'items');
+        $response->assertJsonPath('total', 1);
+    }
+
+    public function test_filter_by_name_cpf()
+    {
+        Customer::factory()->count(100)->create();
+        Customer::factory()->create(['name' => 'John Doe', 'cpf_cnpj' => '153.254.614-12']);
+        Customer::factory()->create(['name' => 'Jane Doe', 'cpf_cnpj' => '553.683.155-30']);
+        Customer::factory()->create(['name' => 'James Smith', 'cpf_cnpj' => '153.683.155-30']);
+
+        $response = $this->get(route('customers.index', ['name' => 'doe', 'cpf_cnpj' => '153.']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(1, 'items');
+        $response->assertJsonPath('total', 1);
+    }
+
+    public function test_filter_no_results()
+    {
+        Customer::factory()->count(100)->create();
+
+        $response = $this->get(route('customers.index', ['name' => 'Kratos']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(0, 'items');
+        $response->assertJsonPath('total', 0);
+    }
+
+    public function test_pagination_second_page()
+    {
+        $customers = Customer::factory()->count(100)->create();
+
+        $response = $this->get(route('customers.index', ['page' => '2']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(50, 'items');
+        $response->assertJsonPath('total', 100);
+        $response->assertJsonPath('items.0.id', $customers[50]->id);
+    }
+
+    public function test_pagination_out_of_bound_page()
+    {
+        Customer::factory()->count(100)->create();
+
+        $response = $this->get(route('customers.index', ['page' => '20']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertJsonCount(0, 'items');
+        $response->assertJsonPath('total', 100);
     }
 
     /**

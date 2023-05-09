@@ -4,16 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
+use App\Repositories\CustomerRepository;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
     /**
+     * @var CustomerRepository
+     */
+    private $repository;
+
+    /**
+     * @param CustomerRepository $repository
+     */
+    public function __construct(CustomerRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        return Customer::paginate($request->query('per_page', 50));
+        return $this->repository
+            ->orderBy('name', 'ASC')
+            ->contains('name', $request->query('name'))
+            ->contains('cpf_cnpj', $request->query('cpf_cnpj'))
+            ->paginate($request->query('page', 1), $request->query('per_page', 50));
     }
 
     /**

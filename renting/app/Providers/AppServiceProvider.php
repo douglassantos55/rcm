@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\CustomerRepository;
+use App\Repositories\EloquentCustomerRepository;
 use App\Services\Balancer\Balancer;
 use App\Services\Balancer\RoundRobinBalancer;
 use App\Services\CircuitBreaker\CircuitBreaker;
@@ -23,6 +25,10 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    public $bindings = [
+        CustomerRepository::class => EloquentCustomerRepository::class,
+    ];
+
     public $singletons = [
         CircuitBreaker::class => RateLimitBreaker::class,
     ];
