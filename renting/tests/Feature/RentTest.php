@@ -170,7 +170,7 @@ class RentTest extends TestCase
             'delivery_address' => '',
             'usage_address' => '',
             'discount_reason' => '',
-            'observations' => '',
+            'observations' => 'Testing creation',
             'transporter' => '',
             'customer_id' => $customer->id,
             'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
@@ -184,8 +184,11 @@ class RentTest extends TestCase
         ], ['accept' => 'application/json']);
 
         $response->assertCreated();
-        $this->assertCount(1, Rent::all());
+        $rent = Rent::first();
+
+        $this->assertModelExists($rent);
         $this->assertCount(2, Item::all());
+        $this->assertEquals('Testing creation', $rent->observations);
     }
 
     /**
@@ -469,7 +472,7 @@ class RentTest extends TestCase
             'delivery_address' => '',
             'usage_address' => '',
             'discount_reason' => '',
-            'observations' => '',
+            'observations' => 'Testing update',
             'transporter' => '',
             'customer_id' => $customer->id,
             'period_id' => 'bf18eb16-0b38-404a-8916-429638f1d793',
@@ -493,6 +496,7 @@ class RentTest extends TestCase
         $this->assertEquals(10, $rent->qty_days);
         $this->assertEquals('bf18eb16-0b38-404a-8916-429638f1d793', $rent->period_id);
         $this->assertEquals($customer->id, $rent->customer_id);
+        $this->assertEquals('Testing update', $rent->observations);
     }
 
     /**

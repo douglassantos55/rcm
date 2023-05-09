@@ -32,7 +32,7 @@ class RentController extends Controller
      */
     public function store(RentRequest $request)
     {
-        $rent = Rent::create($request->validated());
+        $rent = Rent::create($request->input());
         $rent->items()->createMany($request->validated('items'));
 
         return response($rent->refresh(), 201);
@@ -52,7 +52,7 @@ class RentController extends Controller
     public function update(RentRequest $request, Rent $rent)
     {
         DB::transaction(function () use ($rent, $request) {
-            $rent->update($request->validated());
+            $rent->update($request->input());
             $rent->items()->delete();
             $rent->items()->createMany($request->validated('items'));
         });
