@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
 interface Repository
 {
     /**
@@ -10,6 +12,49 @@ interface Repository
      * @return array
      */
     public function get(): array;
+
+    /**
+     * Get an entity by ID
+     *
+     * @param string $id
+     *
+     * @return mixed The entity
+     *
+     * @throws NotFoundHttpException
+     */
+    public function find(string $id): mixed;
+
+    /**
+     * Create an entity
+     *
+     * @param array $data
+     *
+     * @return mixed The created entity
+     */
+    public function create(array $data): mixed;
+
+    /**
+     * Update an entity
+     *
+     * @param string $id The ID of the entity to update
+     * @param array $data The data to update
+     *
+     * @return mixed The updated entity
+     *
+     * @throws NotFoundHttpException
+     */
+    public function update(string $id, array $data): mixed;
+
+    /**
+     * Delete an entity
+     *
+     * @param string $id The ID of the entity to delete
+     *
+     * @return bool
+     *
+     * @throws NotFoundHttpException
+     */
+    public function delete(string $id): bool;
 
     /**
      * Paginates results

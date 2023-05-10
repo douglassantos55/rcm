@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomerRequest;
-use App\Models\Customer;
 use App\Repositories\CustomerRepository;
 use Illuminate\Http\Request;
 
@@ -39,32 +38,31 @@ class CustomerController extends Controller
      */
     public function store(CustomerRequest $request)
     {
-        return Customer::create($request->input())->refresh();
+        return $this->repository->create($request->input());
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Customer $customer)
+    public function show(string $customer)
     {
-        return $customer;
+        return $this->repository->find($customer);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(CustomerRequest $request, Customer $customer)
+    public function update(CustomerRequest $request, string $customer)
     {
-        $customer->update($request->input());
-        return $customer;
+        return $this->repository->update($customer, $request->input());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Customer $customer)
+    public function destroy(string $customer)
     {
-        $customer->delete();
+        $this->repository->delete($customer);
         return response()->noContent();
     }
 }
