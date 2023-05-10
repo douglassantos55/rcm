@@ -79,11 +79,12 @@ class AppServiceProvider extends ServiceProvider
             $breaker = $app->make(CircuitBreaker::class);
             $tracer = $app->make(Tracer::class);
             $balancer = $app->make(Balancer::class);
+            $cache = $app->make(CacheRepository::class);
 
             $service = env('PRICING_SERVICE');
             $instance = $balancer->get($registry->get($service));
 
-            return new RestPricingService($instance, $breaker, $tracer);
+            return new RestPricingService($instance, $breaker, $tracer, $cache);
         });
     }
 
