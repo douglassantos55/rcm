@@ -20,7 +20,7 @@ class SupplierController extends Controller
      */
     public function store(SupplierRequest $request)
     {
-        return Supplier::create($request->validated())->refresh();
+        return Supplier::create($request->input())->refresh();
     }
 
     /**
@@ -36,7 +36,7 @@ class SupplierController extends Controller
      */
     public function update(SupplierRequest $request, Supplier $supplier)
     {
-        $supplier->update($request->validated());
+        $supplier->update($request->input());
 
         return $supplier;
     }

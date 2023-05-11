@@ -124,12 +124,14 @@ class SuppliersTest extends TestCase
             'email' => 'myemail@gmail.com',
             'website' => 'https://google.com',
             'state' => 'NY',
+            'observations' => 'Testing creation',
         ], ['accept' => 'application/json']);
 
         $response->assertStatus(201);
-
         $supplier = Supplier::where('social_name', 'Joaquim')->first();
+
         $this->assertModelExists($supplier);
+        $this->assertEquals('Testing creation', $supplier->observations);
     }
 
     public function test_create_unique_cnpj()
@@ -147,6 +149,27 @@ class SuppliersTest extends TestCase
         $response->assertJsonValidationErrors([
             'cnpj' => 'The cnpj has already been taken.',
         ]);
+    }
+
+    public function test_update(): void
+    {
+        $supplier = Supplier::factory()->create([
+            'social_name' => 'Test',
+            'cnpj' => '20.643.221/0001-95',
+            'observations' => 'Factoried',
+        ]);
+
+        $response = $this->put(route('suppliers.update', $supplier->id), [
+            'social_name' => 'Updated',
+            'cnpj' => '29.039.173/0001-03',
+            'observations' => 'Testing update',
+        ], ['accept' => 'application/json']);
+
+        $response->assertOk();
+        $supplier->refresh();
+
+        $this->assertEquals('Updated', $supplier->social_name);
+        $this->assertEquals('Testing update', $supplier->observations);
     }
 
     public function test_update_unique_cnpj(): void
