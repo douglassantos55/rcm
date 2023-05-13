@@ -212,4 +212,76 @@ class SuppliersTest extends TestCase
         $response->assertStatus(204);
         $this->assertSoftDeleted($supplier);
     }
+
+    public function test_list()
+    {
+        Supplier::factory()->count(300)->create();
+
+        $response = $this->get(route('suppliers.index'), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonCount(300);
+    }
+
+    public function test_filter_by_social_name()
+    {
+        Supplier::factory()->count(100)->create();
+        Supplier::factory()->create(['social_name' => 'John Doe']);
+        Supplier::factory()->create(['social_name' => 'Jane Doe']);
+        Supplier::factory()->create(['social_name' => 'James Doe']);
+
+        $response = $this->get(route('suppliers.index', ['social_name' => 'doe']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonCount(3);
+    }
+
+    public function test_filter_by_cnpj()
+    {
+        Supplier::factory()->count(100)->create();
+        Supplier::factory()->create(['cnpj' => '94.462.105/0001-06']);
+        Supplier::factory()->create(['cnpj' => '84.549.644/0001-23']);
+        Supplier::factory()->create(['cnpj' => '12.961.974/0001-10']);
+
+        $response = $this->get(route('suppliers.index', ['cnpj' => '10']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonCount(2);
+    }
+
+    public function test_filter_by_email()
+    {
+        Supplier::factory()->count(100)->create();
+        Supplier::factory()->create(['email' => 'johndoe@email.com']);
+        Supplier::factory()->create(['email' => 'janedoe@gmail.com']);
+        Supplier::factory()->create(['email' => 'jamesdoe@hotmail.com']);
+
+        $response = $this->get(route('suppliers.index', ['email' => 'ja']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonCount(2);
+    }
+
+    public function test_filter_by_legal_name()
+    {
+        Supplier::factory()->count(100)->create();
+        Supplier::factory()->create(['legal_name' => 'John Doe Inc']);
+        Supplier::factory()->create(['legal_name' => 'Jane Doe SA']);
+        Supplier::factory()->create(['legal_name' => 'James Doe Ltda']);
+
+        $response = $this->get(route('suppliers.index', ['legal_name' => 'Doe']), [
+            'accept' => 'application/json',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonCount(103);
+    }
 }

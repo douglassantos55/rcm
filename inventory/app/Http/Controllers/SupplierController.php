@@ -3,16 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SupplierRequest;
-use App\Models\Supplier;
+use App\Repositories\SupplierRepository;
+use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
     /**
+     * @var SupplierRepository
+     */
+    private $repository;
+
+    public function __construct(SupplierRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
+    /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Supplier::all();
+        return $this->repository
+            ->orderBy('social_name')
+            ->contains('social_name', $request->query('social_name'))
+            ->contains('email', $request->query('email'))
+            ->contains('cnpj', $request->query('cnpj'))
+            ->get();
     }
 
     /**
@@ -20,34 +36,31 @@ class SupplierController extends Controller
      */
     public function store(SupplierRequest $request)
     {
-        return Supplier::create($request->input())->refresh();
+        return $this->repository->create($request->input());
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Supplier $supplier)
+    public function show(string $supplier)
     {
-        return $supplier;
+        return $this->repository->find($supplier);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(SupplierRequest $request, Supplier $supplier)
+    public function update(SupplierRequest $request, string $supplier)
     {
-        $supplier->update($request->input());
-
-        return $supplier;
+        return $this->repository->update($supplier, $request->input());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Supplier $supplier)
+    public function destroy(string $supplier)
     {
-        $supplier->delete();
-
+        $this->repository->delete($supplier);
         return response()->noContent();
     }
 }

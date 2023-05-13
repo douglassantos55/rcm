@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\EloquentSupplierRepository;
+use App\Repositories\SupplierRepository;
 use App\Services\Balancer\Balancer;
 use App\Services\Balancer\RoundRobinBalancer;
 use App\Services\CircuitBreaker\CircuitBreaker;
@@ -22,6 +24,10 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    public $bindings = [
+        SupplierRepository::class => EloquentSupplierRepository::class,
+    ];
+
     /**
      * Register any application services.
      */
