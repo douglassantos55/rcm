@@ -2,9 +2,10 @@
 
 namespace App\Repositories;
 
+use App\Exceptions\DatabaseException;
+use App\Exceptions\EntityNotFoundException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 abstract class EloquentRepository implements Repository
 {
@@ -28,11 +29,14 @@ abstract class EloquentRepository implements Repository
         return $this->getQuery()->get()->all();
     }
 
+    /**
+     * @return Model
+     */
     public function find(string $id): mixed
     {
         $instance = $this->getModel()->newQuery()->find($id);
         if (is_null($instance)) {
-            throw new NotFoundHttpException();
+            throw new EntityNotFoundException();
         }
         return $instance;
     }
@@ -47,7 +51,11 @@ abstract class EloquentRepository implements Repository
 
     public function update(string $id, array $data): mixed
     {
-        return $this->find($id)->update($data);
+        $entity = $this->find($id);
+        if (!$entity->update($data)) {
+            throw new DatabaseException('Could not update');
+        }
+        return $entity;
     }
 
     public function delete(string $id): bool
