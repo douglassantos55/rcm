@@ -29,6 +29,7 @@ class CustomerController extends Controller
         return $this->repository
             ->orderBy('name', 'ASC')
             ->contains('name', $request->query('name'))
+            ->contains('email', $request->query('email'))
             ->contains('cpf_cnpj', $request->query('cpf_cnpj'))
             ->paginate($request->query('page', 1), $request->query('per_page', 50));
     }
