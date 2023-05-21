@@ -35,6 +35,21 @@ class RestPricingService implements PricingService
         $this->client = Http::baseUrl($serviceUrl)->acceptJson();
     }
 
+    public function getRentingValues(string $equipment): array
+    {
+        return $this->breaker->invoke(function () use ($equipment) {
+            return $this->tracer->trace('pricing:get_renting_values', function (array $context) use ($equipment) {
+                $response = $this->client
+                    ->timeout(2)
+                    ->withHeaders($context)
+                    ->withToken(request()->bearerToken())
+                    ->get('/renting-values?equipment_id=' . $equipment);
+
+                return $response->json() ? $response->json() : [];
+            });
+        }, self::NAME, self::MAX_ATTEMPTS);
+    }
+
     public function createRentingValues(array $values): Response
     {
         $response = $this->breaker->invoke(function () use ($values) {
