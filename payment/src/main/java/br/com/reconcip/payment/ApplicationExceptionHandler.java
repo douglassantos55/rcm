@@ -15,15 +15,20 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler
     @ResponseBody
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    public Map<String, String> handleValidationException(BindException e) {
+    public Map<String, Map<String, String>> handleValidationException(BindException e) {
         Map<String, String> errors = new HashMap<>();
+
         e.getFieldErrors().forEach(error ->
                 errors.put(
                         error.getField(),
                         error.getDefaultMessage()
                 )
         );
-        return errors;
+
+        Map<String, Map<String, String>> response = new HashMap<>();
+        response.put("errors", errors);
+
+        return response;
     }
 
 }

@@ -68,6 +68,10 @@ public class PaymentCondition {
         this.increment = increment;
     }
 
+    public UUID getPaymentTypeId() {
+        return paymentType.getId();
+    }
+
     public PaymentType getPaymentType() {
         return paymentType;
     }

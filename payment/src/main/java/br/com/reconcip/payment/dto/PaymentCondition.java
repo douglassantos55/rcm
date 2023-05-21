@@ -21,6 +21,6 @@ public record PaymentCondition(
         @Max(98)
         short installments,
         @NotNull
-        UUID paymentType
+        UUID paymentTypeId
 ) {
 }

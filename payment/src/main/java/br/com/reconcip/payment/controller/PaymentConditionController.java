@@ -26,7 +26,7 @@ public class PaymentConditionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentCondition create(@RequestBody @Valid br.com.reconcip.payment.dto.PaymentCondition paymentCondition) {
-        PaymentType paymentType = this.paymentTypeRepository.findById(paymentCondition.paymentType()).orElseThrow(() ->
+        PaymentType paymentType = this.paymentTypeRepository.findById(paymentCondition.paymentTypeId()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "invalid payment type")
         );
 
@@ -47,7 +47,7 @@ public class PaymentConditionController {
                 new ResponseStatusException(HttpStatus.NOT_FOUND)
         );
 
-        PaymentType paymentType = this.paymentTypeRepository.findById(data.paymentType()).orElseThrow(() ->
+        PaymentType paymentType = this.paymentTypeRepository.findById(data.paymentTypeId()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid payment type")
         );
 
