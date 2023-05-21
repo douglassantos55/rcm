@@ -18,7 +18,7 @@ class EquipmentController extends Controller
 
     public function index()
     {
-        return Equipment::all();
+        return Equipment::with('supplier')->get();
     }
 
     public function show(Equipment $equipment)
