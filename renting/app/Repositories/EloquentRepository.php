@@ -107,7 +107,7 @@ abstract class EloquentRepository implements Repository
         return $this->query;
     }
 
-    private function getModel(): Model
+    protected function getModel(): Model
     {
         $instance = app()->make($this->model);
         if (!$instance instanceof Model) {

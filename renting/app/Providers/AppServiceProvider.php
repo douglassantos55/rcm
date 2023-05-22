@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Repositories\CustomerRepository;
 use App\Repositories\EloquentCustomerRepository;
+use App\Repositories\EloquentRentRepository;
+use App\Repositories\RentRepository;
 use App\Services\Balancer\Balancer;
 use App\Services\Balancer\RoundRobinBalancer;
 use App\Services\CircuitBreaker\CircuitBreaker;
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public $bindings = [
         CustomerRepository::class => EloquentCustomerRepository::class,
+        RentRepository::class => EloquentRentRepository::class,
     ];
 
     public $singletons = [

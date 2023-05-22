@@ -3,28 +3,37 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RentRequest;
-use App\Models\Rent;
+use App\Repositories\RentRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class RentController extends Controller
 {
+    /**
+     * @var RentRepository
+     */
+    private $repository;
+
+    public function __construct(RentRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $rents = Rent::query();
-
         if ($request->query('number')) {
-            $rents->where('id', $request->query('number'));
+            $this->repository->where('id', $request->query('number'));
         }
 
         if ($request->query('customer')) {
-            $rents->where('customer_id', $request->query('customer'));
+            $this->repository->where('customer_id', $request->query('customer'));
         }
 
-        return $rents->paginate($request->query('per_page', 50));
+        return $this->repository
+            ->orderBy('created_at', 'DESC')
+            ->paginate($request->query('page', 1), $request->query('per_page', 50));
     }
 
     /**
@@ -32,40 +41,32 @@ class RentController extends Controller
      */
     public function store(RentRequest $request)
     {
-        $rent = Rent::create($request->input());
-        $rent->items()->createMany($request->validated('items'));
-
-        return response($rent->refresh(), 201);
+        $rent = $this->repository->create($request->input());
+        return response($rent, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Rent $rent)
+    public function show(string $rent)
     {
-        return $rent;
+        return $this->repository->find($rent);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(RentRequest $request, Rent $rent)
+    public function update(RentRequest $request, string $rent)
     {
-        DB::transaction(function () use ($rent, $request) {
-            $rent->update($request->input());
-            $rent->items()->delete();
-            $rent->items()->createMany($request->validated('items'));
-        });
-
-        return $rent;
+        return $this->repository->update($rent, $request->input());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Rent $rent)
+    public function destroy(string $rent)
     {
-        $rent->delete();
+        $this->repository->delete($rent);
         return response()->noContent();
     }
 }
