@@ -92,4 +92,13 @@ interface Repository
      * @return Repository
      */
     public function orderBy(string $column, string $direction = 'ASC'): Repository;
+
+    /**
+     * Fetches related entities
+     *
+     * @param array|string $relations
+     *
+     * @return Repository
+     */
+    public function with(mixed $relations): Repository;
 }

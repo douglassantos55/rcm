@@ -32,6 +32,7 @@ class RentController extends Controller
         }
 
         return $this->repository
+            ->with(['customer'])
             ->orderBy('created_at', 'DESC')
             ->paginate($request->query('page', 1), $request->query('per_page', 50));
     }

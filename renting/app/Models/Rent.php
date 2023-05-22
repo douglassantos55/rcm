@@ -53,4 +53,9 @@ class Rent extends Model
     {
         return $this->hasMany(Item::class);
     }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }

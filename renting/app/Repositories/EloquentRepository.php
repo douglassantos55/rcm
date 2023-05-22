@@ -29,6 +29,12 @@ abstract class EloquentRepository implements Repository
         return $this->getQuery()->get()->all();
     }
 
+    public function with(mixed $relations): Repository
+    {
+        $this->getQuery()->with($relations);
+        return $this;
+    }
+
     /**
      * @return Model
      */
