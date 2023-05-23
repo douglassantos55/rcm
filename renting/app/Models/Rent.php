@@ -36,6 +36,12 @@ class Rent extends Model
 
     protected $with = ['items'];
 
+    protected $appends = [
+        'period',
+        'payment_type',
+        'payment_method',
+        'payment_condition',
+    ];
     protected static function booted(): void
     {
         static::retrieved(function (Rent $rent) {
@@ -57,5 +63,37 @@ class Rent extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function period(): Attribute
+    {
+        return Attribute::get(function () {
+            $service = app()->make(PricingService::class);
+            return $service->getPeriod($this->period_id);
+        });
+    }
+
+    public function paymentType(): Attribute
+    {
+        return Attribute::get(function () {
+            $service = app()->make(PaymentService::class);
+            return $service->getPaymentType($this->payment_type_id);
+        });
+    }
+
+    public function paymentMethod(): Attribute
+    {
+        return Attribute::get(function () {
+            $service = app()->make(PaymentService::class);
+            return $service->getPaymentMethod($this->payment_method_id);
+        });
+    }
+
+    public function paymentCondition(): Attribute
+    {
+        return Attribute::get(function () {
+            $service = app()->make(PaymentService::class);
+            return $service->getPaymentCondition($this->payment_condition_id);
+        });
     }
 }
