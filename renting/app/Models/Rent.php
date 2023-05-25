@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use App\Services\InventoryService;
+use App\Services\PaymentService;
+use App\Services\PricingService;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -37,7 +41,9 @@ class Rent extends Model
     protected $with = ['items'];
 
     protected $appends = [
+        'total',
         'period',
+        'remaining',
         'payment_type',
         'payment_method',
         'payment_condition',
@@ -63,6 +69,22 @@ class Rent extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function total(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->items->reduce(function ($total, $item) {
+                return $total + $item->rent_value;
+            }, 0) + $this->delivery_value - $this->discount;
+        });
+    }
+
+    public function remaining(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->total - $this->paid_value;
+        });
     }
 
     public function period(): Attribute
