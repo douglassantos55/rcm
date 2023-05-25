@@ -22,6 +22,11 @@ class Item extends Model
         'equipment_id',
     ];
 
+    protected $casts = [
+        'rent_value' => 'float',
+        'unit_value' => 'float',
+    ];
+
     protected $appends = ['equipment'];
 
     public static function booted(): void
@@ -30,8 +35,9 @@ class Item extends Model
             $equipment = $item->equipment;
 
             if (!empty($equipment)) {
-                $item->rent_value = $equipment['rent_value'] * $item->qty;
+                $increment = 1 + $item->rent->paymentCondition['increment'] / 100;
                 $item->unit_value = $equipment['unit_value'] * $item->qty;
+                $item->rent_value = $equipment['values'][$item->rent->period_id]['value'] * $increment * $item->qty;
             }
         });
     }
