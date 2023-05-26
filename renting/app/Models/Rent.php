@@ -48,6 +48,14 @@ class Rent extends Model
         'payment_method',
         'payment_condition',
     ];
+
+    protected $casts = [
+        'bill' => 'float',
+        'discount' => 'float',
+        'delivery_value' => 'float',
+        'paid_value' => 'float',
+    ];
+
     protected static function booted(): void
     {
         static::retrieved(function (Rent $rent) {

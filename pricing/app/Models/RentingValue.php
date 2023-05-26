@@ -15,4 +15,8 @@ class RentingValue extends Model
         'equipment_id',
         'period_id',
     ];
+
+    protected $casts = [
+        'value' => 'float',
+    ];
 }
