@@ -17,9 +17,9 @@ type Entry struct {
 	Id      uuid.UUID  `json:"id"`
 	Type    EntryType  `json:"type"`
 	Value   float64    `json:"value"`
-	Paid    bool       `json:"paid"`
 	Date    time.Time  `json:"date"`
 	PayDate *time.Time `json:"pay_date"`
+	TransId uuid.UUID  `json:"transaction_id"`
 }
 
 type Transaction struct {
@@ -38,6 +38,8 @@ type Service interface {
 
 type Repository interface {
 	Create(entry *Entry) (*Entry, error)
+	Update(entry *Entry) (*Entry, error)
+	FindByTransaction(id uuid.UUID) (*Entry, error)
 }
 
 type service struct {
@@ -61,6 +63,7 @@ func (s *service) createEntry(transaction Transaction, entryType EntryType) (*En
 		Id:      uuid.New(),
 		Date:    transaction.Date,
 		Type:    entryType,
+		TransId: transaction.Id,
 		PayDate: transaction.PayDate,
 		Value:   transaction.Value,
 	}
@@ -73,7 +76,16 @@ func (s *service) createEntry(transaction Transaction, entryType EntryType) (*En
 }
 
 func (s *service) UpdateEntry(transaction Transaction) (*Entry, error) {
-	return nil, nil
+	entry, err := s.repo.FindByTransaction(transaction.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	entry.Value = transaction.Value
+	entry.Date = transaction.Date
+	entry.PayDate = transaction.PayDate
+
+	return s.repo.Update(entry)
 }
 
 func (s *service) DeleteEntry(transaction Transaction) (*Entry, error) {

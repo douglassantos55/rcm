@@ -1,6 +1,7 @@
 package pkg_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -17,6 +18,20 @@ func (r *InMemoryRepository) Create(entry *pkg.Entry) (*pkg.Entry, error) {
 	return entry, nil
 }
 
+func (r *InMemoryRepository) Update(entry *pkg.Entry) (*pkg.Entry, error) {
+	r.entries[entry.Id] = entry
+	return entry, nil
+}
+
+func (r *InMemoryRepository) FindByTransaction(id uuid.UUID) (*pkg.Entry, error) {
+	for _, entry := range r.entries {
+		if entry.TransId == id {
+			return entry, nil
+		}
+	}
+	return nil, fmt.Errorf("entry not found for transaction: %v", id)
+}
+
 func NewInMemoryRepository() pkg.Repository {
 	return &InMemoryRepository{
 		entries: make(map[uuid.UUID]*pkg.Entry),
@@ -27,8 +42,9 @@ func TestService(t *testing.T) {
 	t.Run("create inflow entry without date", func(t *testing.T) {
 		svc := pkg.NewService(NewInMemoryRepository())
 
+		id := uuid.New()
 		entry, err := svc.CreateInflow(pkg.Transaction{
-			Id:    uuid.New(),
+			Id:    id,
 			Value: 500.0,
 		})
 
@@ -42,6 +58,10 @@ func TestService(t *testing.T) {
 
 		if entry.Type != pkg.Inflow {
 			t.Errorf("expected type %v, got %v", pkg.Inflow, entry.Type)
+		}
+
+		if entry.TransId != id {
+			t.Errorf("expected id %v, got %v", id, entry.TransId)
 		}
 
 		diff := time.Since(entry.Date)
@@ -211,6 +231,64 @@ func TestService(t *testing.T) {
 
 		if !entry.PayDate.Equal(payDate) {
 			t.Errorf("expected payment date %v, got %v", payDate, entry.PayDate)
+		}
+	})
+
+	t.Run("update existing entry", func(t *testing.T) {
+		svc := pkg.NewService(NewInMemoryRepository())
+
+		transactionId := uuid.New()
+
+		_, err := svc.CreateInflow(pkg.Transaction{
+			Id:    transactionId,
+			Value: 100.53,
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		date := time.Now().AddDate(0, 0, -7)
+		payDate := time.Now().AddDate(0, 0, -2)
+
+		entry, err := svc.UpdateEntry(pkg.Transaction{
+			Id:      transactionId,
+			Value:   200.53,
+			Date:    date,
+			PayDate: &payDate,
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if entry.Type != pkg.Inflow {
+			t.Errorf("expected type %v, got %v", pkg.Inflow, entry.Type)
+		}
+
+		if entry.Value != 200.53 {
+			t.Errorf("expected value %v, got %v", 200.53, entry.Value)
+		}
+
+		if entry.Date.IsZero() {
+			t.Errorf("expected date %v, got %v", date, entry.Date)
+		}
+
+		if entry.PayDate == nil {
+			t.Errorf("expected payment date %v, got %v", payDate, entry.PayDate)
+		}
+	})
+
+	t.Run("update non existing entry", func(t *testing.T) {
+		svc := pkg.NewService(NewInMemoryRepository())
+
+		_, err := svc.UpdateEntry(pkg.Transaction{
+			Id:    uuid.New(),
+			Value: 5000,
+		})
+
+		if err == nil {
+			t.Fatal("expected error")
 		}
 	})
 }
