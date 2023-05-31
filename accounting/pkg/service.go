@@ -33,12 +33,13 @@ type Service interface {
 	CreateInflow(transaction Transaction) (*Entry, error)
 	CreateOutflow(transaction Transaction) (*Entry, error)
 	UpdateEntry(transaction Transaction) (*Entry, error)
-	DeleteEntry(transaction Transaction) (*Entry, error)
+	DeleteEntry(transactionId uuid.UUID) error
 }
 
 type Repository interface {
 	Create(entry *Entry) (*Entry, error)
 	Update(entry *Entry) (*Entry, error)
+	Delete(id uuid.UUID) error
 	FindByTransaction(id uuid.UUID) (*Entry, error)
 }
 
@@ -88,6 +89,10 @@ func (s *service) UpdateEntry(transaction Transaction) (*Entry, error) {
 	return s.repo.Update(entry)
 }
 
-func (s *service) DeleteEntry(transaction Transaction) (*Entry, error) {
-	return nil, nil
+func (s *service) DeleteEntry(transactionId uuid.UUID) error {
+	entry, err := s.repo.FindByTransaction(transactionId)
+	if err != nil {
+		return err
+	}
+	return s.repo.Delete(entry.Id)
 }

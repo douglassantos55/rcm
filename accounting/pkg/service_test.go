@@ -23,6 +23,14 @@ func (r *InMemoryRepository) Update(entry *pkg.Entry) (*pkg.Entry, error) {
 	return entry, nil
 }
 
+func (r *InMemoryRepository) Delete(id uuid.UUID) error {
+	if _, ok := r.entries[id]; !ok {
+		return fmt.Errorf("entry not found for id: %v", id)
+	}
+	delete(r.entries, id)
+	return nil
+}
+
 func (r *InMemoryRepository) FindByTransaction(id uuid.UUID) (*pkg.Entry, error) {
 	for _, entry := range r.entries {
 		if entry.TransId == id {
@@ -289,6 +297,33 @@ func TestService(t *testing.T) {
 
 		if err == nil {
 			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("delete entry", func(t *testing.T) {
+		svc := pkg.NewService(NewInMemoryRepository())
+
+		id := uuid.New()
+
+		_, err := svc.CreateOutflow(pkg.Transaction{
+			Id:    id,
+			Value: 305.53,
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := svc.DeleteEntry(id); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("delete non existing entry", func(t *testing.T) {
+		svc := pkg.NewService(NewInMemoryRepository())
+
+		if err := svc.DeleteEntry(uuid.New()); err == nil {
+			t.Error("expected error")
 		}
 	})
 }
