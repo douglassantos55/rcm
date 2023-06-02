@@ -13,7 +13,12 @@ type InMemoryRepository struct {
 	entries map[uuid.UUID]*pkg.Entry
 }
 
+func (r *InMemoryRepository) Close() error {
+	return nil
+}
+
 func (r *InMemoryRepository) Create(entry *pkg.Entry) (*pkg.Entry, error) {
+	entry.Id = uuid.New()
 	r.entries[entry.Id] = entry
 	return entry, nil
 }
@@ -60,6 +65,10 @@ func TestService(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		if entry.Id == uuid.Nil {
+			t.Error("expected ID")
+		}
+
 		if entry.Account != pkg.RentRevenue {
 			t.Errorf("expected account %v, got %v", pkg.RentRevenue, entry.Account)
 		}
@@ -96,6 +105,10 @@ func TestService(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		if entry.Id == uuid.Nil {
+			t.Error("expected ID")
+		}
+
 		if entry.Account != pkg.RentRevenue {
 			t.Errorf("expected account %v, got %v", pkg.RentRevenue, entry.Account)
 		}
@@ -130,6 +143,10 @@ func TestService(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		if entry.Id == uuid.Nil {
+			t.Error("expected ID")
+		}
+
 		if entry.Account != pkg.RentRevenue {
 			t.Errorf("expected account %v, got %v", pkg.RentRevenue, entry.Account)
 		}
@@ -152,7 +169,7 @@ func TestService(t *testing.T) {
 
 		transactionId := uuid.New()
 
-		_, err := svc.RentCreated(pkg.Transaction{
+		original, err := svc.RentCreated(pkg.Transaction{
 			Id:    transactionId,
 			Value: 100.53,
 		})
@@ -173,6 +190,10 @@ func TestService(t *testing.T) {
 
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		if entry.Id != original.Id {
+			t.Errorf("expected ID %v, got %v", original.Id, entry.Id)
 		}
 
 		if entry.Account != pkg.RentRevenue {

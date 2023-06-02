@@ -36,13 +36,6 @@ type Service interface {
 	DeleteEntry(transactionId uuid.UUID) error
 }
 
-type Repository interface {
-	Create(entry *Entry) (*Entry, error)
-	Update(entry *Entry) (*Entry, error)
-	Delete(id uuid.UUID) error
-	FindByTransaction(id uuid.UUID) (*Entry, error)
-}
-
 type service struct {
 	repo Repository
 }
@@ -53,7 +46,6 @@ func NewService(repo Repository) Service {
 
 func (s *service) RentCreated(transaction Transaction) (*Entry, error) {
 	entry := &Entry{
-		Id:      uuid.New(),
 		Date:    transaction.Date,
 		TransId: transaction.Id,
 		PayDate: transaction.PayDate,
