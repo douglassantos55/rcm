@@ -36,6 +36,36 @@ func TestRepository(t *testing.T) {
 		}
 	})
 
+	t.Run("create with id", func(t *testing.T) {
+		repository, err := pkg.NewSqlRepository()
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		id := uuid.New()
+
+		entry, err := repository.Create(&pkg.Entry{
+			Id:      id,
+			Date:    time.Now(),
+			Account: pkg.OtherRevenue,
+			Value:   5005.53,
+			TransId: uuid.New(),
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if entry == nil {
+			t.Fatal("should have created entry")
+		}
+
+		if entry.Id != id {
+			t.Errorf("expected ID %v, got %v", id, entry.Id)
+		}
+	})
+
 	t.Run("update without ID", func(t *testing.T) {
 		repository, err := pkg.NewSqlRepository()
 		if err != nil {
@@ -111,6 +141,39 @@ func TestRepository(t *testing.T) {
 
 		if updated.Account != pkg.RentRevenue {
 			t.Errorf("expected account %v, got %v", pkg.RentRevenue, updated.Account)
+		}
+	})
+
+	t.Run("delete non existing", func(t *testing.T) {
+		repository, err := pkg.NewSqlRepository()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := repository.Delete(uuid.New()); err == nil {
+			t.Error("should not delete non existing entry")
+		}
+	})
+
+	t.Run("delete existing", func(t *testing.T) {
+		repository, err := pkg.NewSqlRepository()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		entry, err := repository.Create(&pkg.Entry{
+			Value:   100,
+			Date:    time.Now(),
+			Account: pkg.RentRevenue,
+			TransId: uuid.New(),
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := repository.Delete(entry.Id); err != nil {
+			t.Fatal(err)
 		}
 	})
 }

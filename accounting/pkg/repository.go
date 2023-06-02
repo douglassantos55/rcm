@@ -40,7 +40,12 @@ func (r *SqlRepository) Create(entry *Entry) (*Entry, error) {
 		return nil, err
 	}
 
-	id := uuid.New()
+	var id uuid.UUID
+	if entry.Id == uuid.Nil {
+		id = uuid.New()
+	} else {
+		id = entry.Id
+	}
 
 	if _, err = stmt.Exec(
 		id,
@@ -104,6 +109,25 @@ func (r *SqlRepository) Update(entry *Entry) (*Entry, error) {
 }
 
 func (r *SqlRepository) Delete(id uuid.UUID) error {
+	stmt, err := r.connection.Prepare("DELETE FROM entries WHERE id = ?")
+	if err != nil {
+		return err
+	}
+
+	result, err := stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+
+	deleted, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if deleted == 0 {
+		return errors.New("could not delete entry")
+	}
+
 	return nil
 }
 
