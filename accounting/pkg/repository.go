@@ -3,10 +3,20 @@ package pkg
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+type entry struct {
+	Id      uuid.UUID
+	Value   float64
+	Account Account
+	TransId uuid.UUID
+	Date    int64
+	PayDate *int64
+}
 
 type Repository interface {
 	Create(entry *Entry) (*Entry, error)
@@ -132,5 +142,39 @@ func (r *SqlRepository) Delete(id uuid.UUID) error {
 }
 
 func (r *SqlRepository) FindByTransaction(id uuid.UUID) (*Entry, error) {
-	return nil, nil
+	stmt, err := r.connection.Prepare(`
+        SELECT id, value, account, trans_id, unixepoch(date), unixepoch(pay_date)
+        FROM entries
+        WHERE trans_id = ?
+    `)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry entry
+	row := stmt.QueryRow(id)
+
+	if err := row.Scan(
+		&entry.Id,
+		&entry.Value,
+		&entry.Account,
+		&entry.TransId,
+		&entry.Date,
+		&entry.PayDate,
+	); err != nil {
+		return nil, err
+	}
+
+	date := time.UnixMilli(entry.Date * 1000)
+	payDate := time.UnixMilli(*entry.PayDate * 1000)
+
+	return &Entry{
+		Id:      entry.Id,
+		Value:   entry.Value,
+		Account: entry.Account,
+		TransId: entry.TransId,
+		Date:    date,
+		PayDate: &payDate,
+	}, nil
 }
