@@ -3,8 +3,10 @@ package pkg
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -29,8 +31,46 @@ type SqlRepository struct {
 	connection *sql.DB
 }
 
-func NewSqlRepository() (Repository, error) {
-	conn, err := sql.Open("sqlite3", "test.db")
+type Driver interface {
+	Name() string
+	DSN() string
+}
+
+type MySQL struct {
+	Host     string
+	User     string
+	Password string
+	Database string
+}
+
+func (driver MySQL) Name() string {
+	return "mysql"
+}
+
+func (driver MySQL) DSN() string {
+	return fmt.Sprintf(
+		"%s:%s@tcp(%s)/%s",
+		driver.User,
+		driver.Password,
+		driver.Host,
+		driver.Database,
+	)
+}
+
+type Sqlite struct {
+	Filename string
+}
+
+func (driver Sqlite) Name() string {
+	return "sqlite3"
+}
+
+func (driver Sqlite) DSN() string {
+	return "file:" + driver.Filename
+}
+
+func NewSqlRepository(driver Driver) (Repository, error) {
+	conn, err := sql.Open(driver.Name(), driver.DSN())
 	if err != nil {
 		return nil, err
 	}

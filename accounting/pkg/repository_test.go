@@ -10,7 +10,7 @@ import (
 
 func TestRepository(t *testing.T) {
 	t.Run("create", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 
 		if err != nil {
 			t.Fatal(err)
@@ -37,7 +37,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("create with id", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 
 		if err != nil {
 			t.Fatal(err)
@@ -67,7 +67,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("update without ID", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -85,7 +85,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("update non existing", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 
 		if err != nil {
 			t.Fatal(err)
@@ -105,7 +105,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("update existing", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -145,7 +145,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("delete non existing", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -156,7 +156,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("delete existing", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -178,7 +178,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("find by transaction non existing", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -190,7 +190,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("find by transaction existing", func(t *testing.T) {
-		repository, err := pkg.NewSqlRepository()
+		repository, err := pkg.NewSqlRepository(pkg.Sqlite{"test.db"})
 		if err != nil {
 			t.Fatal(err)
 		}
