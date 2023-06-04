@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RentRequest;
+use App\Messenger\Messenger;
 use App\Repositories\RentRepository;
 use Illuminate\Http\Request;
 
@@ -13,8 +14,11 @@ class RentController extends Controller
      */
     private $repository;
 
-    public function __construct(RentRepository $repository)
+    private $messenger;
+
+    public function __construct(RentRepository $repository, Messenger $messenger)
     {
+        $this->messenger = $messenger;
         $this->repository = $repository;
     }
 
@@ -43,6 +47,8 @@ class RentController extends Controller
     public function store(RentRequest $request)
     {
         $rent = $this->repository->create($request->input());
+        $this->messenger->send($rent, 'order.created');
+
         return response($rent, 201);
     }
 
