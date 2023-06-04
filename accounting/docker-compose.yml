@@ -1,0 +1,49 @@
+version: '3'
+services:
+  app:
+    image: 'golang'
+    working_dir: '/app'
+    command: ["go", "run", "cmd/main.go"]
+    environment:
+      DB_HOST: '${DB_HOST}'
+      DB_USERNAME: '${DB_USERNAME}'
+      DB_PASSWORD: '${DB_PASSWORD}'
+      DB_DATABASE: '${DB_DATABASE}'
+
+      BROKER_HOST: '${BROKER_HOST}'
+      BROKER_USERNAME: '${BROKER_USERNAME}'
+      BROKER_PASSWORD: '${BROKER_PASSWORD}'
+    volumes:
+      - '.:/app'
+    depends_on:
+      - mysql
+    networks:
+      - accounting
+      - reconcip-microservices_infra
+
+  mysql:
+    image: 'mysql/mysql-server:8.0'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    ports:
+      - '${DB_PORT_FORWARD}:3306'
+    volumes:
+      - 'mysql:/var/lib/mysql'
+    networks:
+      - accounting
+
+networks:
+  accounting:
+    driver: bridge
+  reconcip-microservices_infra:
+    external: true
+
+volumes:
+  mysql:
+    driver: local
+
