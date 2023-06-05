@@ -19,6 +19,7 @@ class RentTest extends TestCase
 
         $this->partialMock(Registry::class, function (MockInterface $mock) {
             $mock->shouldReceive('get')->with('inventory')->andReturn(['inventory']);
+            $mock->shouldReceive('get')->with('payment')->andReturn(['payment']);
         });
     }
 

@@ -629,7 +629,7 @@ class RentTest extends TestCase
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(20, 'data');
+        $response->assertJsonCount(20, 'items');
     }
 
     public function test_list_paginates()
@@ -640,7 +640,7 @@ class RentTest extends TestCase
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(50, 'data');
+        $response->assertJsonCount(50, 'items');
     }
 
     public function test_list_paginates_per_page()
@@ -662,7 +662,7 @@ class RentTest extends TestCase
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(100, 'data');
+        $response->assertJsonCount(100, 'items');
     }
 
     public function test_list_filter_by_customer()
@@ -687,7 +687,7 @@ class RentTest extends TestCase
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(1, 'data');
+        $response->assertJsonCount(1, 'items');
     }
 
     /**
