@@ -21,7 +21,13 @@ func main() {
 	}
 
 	svc := pkg.NewService(repository)
-	if err := pkg.OrderCreatedSubscriber(svc, "rabbitmq", "guest", "guest"); err != nil {
+
+	if err := pkg.OrderCreatedSubscriber(
+		svc,
+		os.Getenv("MESSENGER_HOST"),
+		os.Getenv("MESSENGER_USERNAME"),
+		os.Getenv("MESSENGER_PASSWORD"),
+	); err != nil {
 		log.Print(err)
 	}
 }
