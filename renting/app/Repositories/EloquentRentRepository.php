@@ -24,7 +24,7 @@ class EloquentRentRepository extends EloquentRepository implements RentRepositor
             $rent = $this->getModel()->create($data);
             $this->createItems($rent->id, $items);
 
-            return response($rent->refresh(), 201);
+            return $rent;
         });
     }
 
