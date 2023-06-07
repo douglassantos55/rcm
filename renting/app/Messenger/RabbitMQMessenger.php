@@ -29,7 +29,7 @@ class RabbitMQMessenger implements Messenger
     public function send(mixed $data, string $key)
     {
         // Make sure the exchange is declared
-        $this->channel->exchange_declare('orders', AMQPExchangeType::TOPIC, false, true, false);
+        $this->channel->exchange_declare('rents', AMQPExchangeType::TOPIC, false, true, false);
 
         $json = json_encode($data);
         if ($json === false) {
@@ -42,7 +42,7 @@ class RabbitMQMessenger implements Messenger
             'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
         ]);
 
-        $this->channel->basic_publish($message, 'orders', $key);
+        $this->channel->basic_publish($message, 'rents', $key);
 
         $this->channel->close();
         $this->connection->close();

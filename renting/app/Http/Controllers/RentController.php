@@ -53,7 +53,7 @@ class RentController extends Controller
             'date' => $rent->start_date,
             'pay_date' => null,
             'value' => $rent->total,
-        ], 'order.created');
+        ], 'rent.created');
 
         return response($rent, 201);
     }
