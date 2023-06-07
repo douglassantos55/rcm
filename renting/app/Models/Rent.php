@@ -54,6 +54,8 @@ class Rent extends Model
         'discount' => 'float',
         'delivery_value' => 'float',
         'paid_value' => 'float',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     protected static function booted(): void
