@@ -47,7 +47,13 @@ class RentController extends Controller
     public function store(RentRequest $request)
     {
         $rent = $this->repository->create($request->input());
-        $this->messenger->send($rent, 'order.created');
+
+        $this->messenger->send([
+            'id' => $rent->id,
+            'date' => $rent->start_date,
+            'pay_date' => null,
+            'value' => $rent->total,
+        ], 'order.created');
 
         return response($rent, 201);
     }

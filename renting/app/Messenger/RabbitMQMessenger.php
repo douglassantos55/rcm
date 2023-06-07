@@ -2,7 +2,7 @@
 
 namespace App\Messenger;
 
-use JsonSerializable;
+use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Exchange\AMQPExchangeType;
@@ -26,12 +26,18 @@ class RabbitMQMessenger implements Messenger
         $this->channel = $this->connection->channel();
     }
 
-    public function send(JsonSerializable $data, string $key)
+    public function send(mixed $data, string $key)
     {
         // Make sure the exchange is declared
         $this->channel->exchange_declare('orders', AMQPExchangeType::TOPIC, false, true, false);
 
-        $message = new AMQPMessage(json_encode($data), [
+        $json = json_encode($data);
+        if ($json === false) {
+            Log::debug("could not encode data to JSON", ['data' => $data]);
+            return;
+        }
+
+        $message = new AMQPMessage($json, [
             'content_type' => 'application/json',
             'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
         ]);
