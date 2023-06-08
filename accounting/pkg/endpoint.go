@@ -21,7 +21,7 @@ func rentUpdatedEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		transaction := request.(Transaction)
 		entry, err := svc.UpdateEntry(transaction)
-		if err != nil {
+		if err != nil && err != ErrEntryNotFound {
 			return nil, err
 		}
 		return entry, nil

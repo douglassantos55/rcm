@@ -14,6 +14,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var ErrEntryNotFound = errors.New("Entry not found")
+
 type Repository interface {
 	Create(entry *Entry) (*Entry, error)
 	Update(entry *Entry) (*Entry, error)
@@ -135,7 +137,7 @@ func (r *SqlRepository) FindByTransaction(id uuid.UUID) (*Entry, error) {
 	query := r.connection.From("entries").Where(goqu.Ex{"trans_id": id})
 
 	if r.connection.Dialect() == "sqlite3" {
-        return scanSqliteWithDate(query)
+		return scanSqliteWithDate(query)
 	}
 
 	var entry Entry
@@ -146,7 +148,7 @@ func (r *SqlRepository) FindByTransaction(id uuid.UUID) (*Entry, error) {
 	}
 
 	if !found {
-		return nil, errors.New("entry not found")
+		return nil, ErrEntryNotFound
 	}
 
 	return &entry, nil
@@ -168,7 +170,7 @@ func scanSqliteWithDate(query *goqu.SelectDataset) (*Entry, error) {
 	}
 
 	if !found {
-		return nil, errors.New("entry not found")
+		return nil, ErrEntryNotFound
 	}
 
 	date, err := time.Parse(time.RFC3339, entry.Date)
