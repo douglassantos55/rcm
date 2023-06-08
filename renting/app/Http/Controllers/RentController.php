@@ -71,7 +71,16 @@ class RentController extends Controller
      */
     public function update(RentRequest $request, string $rent)
     {
-        return $this->repository->update($rent, $request->input());
+        $updatedEntity = $this->repository->update($rent, $request->input());
+
+        $this->messenger->send([
+            'id' => $updatedEntity->id,
+            'date' => $updatedEntity->start_date,
+            'pay_date' => null,
+            'value' => $updatedEntity->total,
+        ], 'rent.updated');
+
+        return $updatedEntity;
     }
 
     /**
