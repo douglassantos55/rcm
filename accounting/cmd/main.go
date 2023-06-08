@@ -36,7 +36,7 @@ func main() {
 	var wg sync.WaitGroup
 	svc := pkg.NewService(repository)
 
-	wg.Add(2)
+	wg.Add(3)
 
 	go func(svc pkg.Service) {
 		defer wg.Done()
@@ -68,6 +68,20 @@ func main() {
 		}
 	}(svc)
 
+	go func(svc pkg.Service) {
+		defer wg.Done()
+
+		channel, err := conn.Channel()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer channel.Close()
+
+		if err := pkg.RentDeletedSubscriber(svc, channel); err != nil {
+			log.Fatal(err)
+		}
+	}(svc)
 
 	wg.Wait()
 }

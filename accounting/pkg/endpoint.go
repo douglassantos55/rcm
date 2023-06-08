@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/google/uuid"
 )
 
 func rentCreatedEndpoint(svc Service) endpoint.Endpoint {
@@ -28,3 +29,9 @@ func rentUpdatedEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
+func rentDeletedEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (any, error) {
+		uuid := request.(uuid.UUID)
+		return nil, svc.DeleteEntry(uuid)
+	}
+}

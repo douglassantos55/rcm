@@ -6,6 +6,7 @@ import (
 	"log"
 
 	kit_amqp "github.com/go-kit/kit/transport/amqp"
+	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 )
 
@@ -87,23 +88,35 @@ func RentUpdatedSubscriber(svc Service, channel *amqp.Channel) error {
 
 	return nil
 }
+
+func RentDeletedSubscriber(svc Service, channel *amqp.Channel) error {
+	queue, err := setupQueue(channel, "rents", "rent.deleted", "accounting.rent.deleted")
+	if err != nil {
+		return err
+	}
+
 	messages, err := channel.Consume(queue.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
-	var forever chan bool
+	subscriber := kit_amqp.NewSubscriber(
+		rentDeletedEndpoint(svc),
+		decodeUUID,
+		kit_amqp.EncodeJSONResponse,
+		kit_amqp.SubscriberResponsePublisher(kit_amqp.NopResponsePublisher),
+		kit_amqp.SubscriberErrorEncoder(kit_amqp.SingleNackRequeueErrorEncoder),
+	)
 
-	go func() {
-		handler := subscriber.ServeDelivery(channel)
-		for message := range messages {
-			handler(&message)
-		}
-	}()
+	handler := subscriber.ServeDelivery(channel)
 
-	print("[x] Waiting for messages\n")
+	print("[*] Waiting for 'rent.deleted' messages\n")
 
-	<-forever
+	for message := range messages {
+		log.Printf("[*] Message 'rent.deleted': %s", message.Body)
+		handler(&message)
+	}
+
 	return nil
 }
 
@@ -113,4 +126,12 @@ func decodeTransaction(ctx context.Context, message *amqp.Delivery) (any, error)
 		return nil, err
 	}
 	return transaction, nil
+}
+
+func decodeUUID(ctx context.Context, message *amqp.Delivery) (any, error) {
+	uuid, err := uuid.ParseBytes(message.Body)
+	if err != nil {
+		return nil, err
+	}
+	return uuid, nil
 }
