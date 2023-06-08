@@ -15,12 +15,12 @@ const (
 )
 
 type Entry struct {
-	Id      uuid.UUID  `json:"id"`
-	Value   float64    `json:"value"`
-	Date    time.Time  `json:"date"`
-	PayDate *time.Time `json:"pay_date"`
-	Account Account    `json:"account"`
-	TransId uuid.UUID  `json:"transaction_id"`
+	Id      uuid.UUID  `json:"id" db:"id" goqu:"skipupdate"`
+	Value   float64    `json:"value" db:"value"`
+	Date    time.Time  `json:"date" db:"date"`
+	PayDate *time.Time `json:"pay_date" db:"pay_date"`
+	Account Account    `json:"account" db:"account"`
+	TransId uuid.UUID  `json:"transaction_id" db:"trans_id"`
 }
 
 type Transaction struct {

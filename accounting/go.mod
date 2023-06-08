@@ -11,6 +11,8 @@ require (
 )
 
 require (
+	github.com/doug-martin/goqu v5.0.0+incompatible
+	github.com/doug-martin/goqu/v9 v9.18.0
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 )

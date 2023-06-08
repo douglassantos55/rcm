@@ -6,19 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/doug-martin/goqu/v9"
+	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
+	_ "github.com/doug-martin/goqu/v9/dialect/sqlite3"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-type entry struct {
-	Id      uuid.UUID
-	Value   float64
-	Account Account
-	TransId uuid.UUID
-	Date    int64
-	PayDate *int64
-}
 
 type Repository interface {
 	Create(entry *Entry) (*Entry, error)
@@ -28,7 +22,7 @@ type Repository interface {
 }
 
 type SqlRepository struct {
-	connection *sql.DB
+	connection *goqu.Database
 }
 
 type Driver interface {
@@ -49,7 +43,7 @@ func (driver MySQL) Name() string {
 
 func (driver MySQL) DSN() string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s)/%s",
+		"%s:%s@tcp(%s)/%s?parseTime=true",
 		driver.User,
 		driver.Password,
 		driver.Host,
@@ -66,7 +60,7 @@ func (driver Sqlite) Name() string {
 }
 
 func (driver Sqlite) DSN() string {
-	return "file:" + driver.Filename
+	return "file:" + driver.Filename + "?_loc=auto"
 }
 
 func NewSqlRepository(driver Driver) (Repository, error) {
@@ -76,46 +70,21 @@ func NewSqlRepository(driver Driver) (Repository, error) {
 	}
 
 	return &SqlRepository{
-		connection: conn,
+		connection: goqu.New(driver.Name(), conn),
 	}, nil
 }
 
 func (r *SqlRepository) Create(entry *Entry) (*Entry, error) {
-	stmt, err := r.connection.Prepare(`
-        INSERT INTO entries (id, value, date, pay_date, account, trans_id)
-        VALUES (?, ?, ?, ?, ?, ?)
-    `)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var id uuid.UUID
 	if entry.Id == uuid.Nil {
-		id = uuid.New()
-	} else {
-		id = entry.Id
+		entry.Id = uuid.New()
 	}
 
-	if _, err = stmt.Exec(
-		id,
-		entry.Value,
-		entry.Date,
-		entry.PayDate,
-		entry.Account,
-		entry.TransId,
-	); err != nil {
+	query := r.connection.Insert("entries").Rows(entry).Executor()
+	if _, err := query.Exec(); err != nil {
 		return nil, err
 	}
 
-	return &Entry{
-		Id:      id,
-		Value:   entry.Value,
-		Date:    entry.Date,
-		PayDate: entry.PayDate,
-		Account: entry.Account,
-		TransId: entry.TransId,
-	}, nil
+	return entry, nil
 }
 
 func (r *SqlRepository) Update(entry *Entry) (*Entry, error) {
@@ -123,25 +92,9 @@ func (r *SqlRepository) Update(entry *Entry) (*Entry, error) {
 		return nil, errors.New("the given entry has no ID")
 	}
 
-	stmt, err := r.connection.Prepare(`
-        UPDATE entries
-        SET value = ?, date = ?, pay_date = ?, account = ?, trans_id = ?
-        WHERE id = ?
-    `)
+	query := r.connection.Update("entries").Set(entry).Where(goqu.Ex{"id": entry.Id}).Executor()
 
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := stmt.Exec(
-		entry.Value,
-		entry.Date,
-		entry.PayDate,
-		entry.Account,
-		entry.TransId,
-		entry.Id,
-	)
-
+	result, err := query.Exec()
 	if err != nil {
 		return nil, err
 	}
@@ -159,12 +112,9 @@ func (r *SqlRepository) Update(entry *Entry) (*Entry, error) {
 }
 
 func (r *SqlRepository) Delete(id uuid.UUID) error {
-	stmt, err := r.connection.Prepare("DELETE FROM entries WHERE id = ?")
-	if err != nil {
-		return err
-	}
+	query := r.connection.Delete("entries").Where(goqu.Ex{"id": id}).Executor()
 
-	result, err := stmt.Exec(id)
+	result, err := query.Exec()
 	if err != nil {
 		return err
 	}
@@ -182,39 +132,61 @@ func (r *SqlRepository) Delete(id uuid.UUID) error {
 }
 
 func (r *SqlRepository) FindByTransaction(id uuid.UUID) (*Entry, error) {
-	stmt, err := r.connection.Prepare(`
-        SELECT id, value, account, trans_id, unixepoch(date), unixepoch(pay_date)
-        FROM entries
-        WHERE trans_id = ?
-    `)
+	query := r.connection.From("entries").Where(goqu.Ex{"trans_id": id})
+
+	if r.connection.Dialect() == "sqlite3" {
+        return scanSqliteWithDate(query)
+	}
+
+	var entry Entry
+	found, err := query.ScanStruct(&entry)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var entry entry
-	row := stmt.QueryRow(id)
+	if !found {
+		return nil, errors.New("entry not found")
+	}
 
-	if err := row.Scan(
-		&entry.Id,
-		&entry.Value,
-		&entry.Account,
-		&entry.TransId,
-		&entry.Date,
-		&entry.PayDate,
-	); err != nil {
+	return &entry, nil
+}
+
+func scanSqliteWithDate(query *goqu.SelectDataset) (*Entry, error) {
+	var entry struct {
+		Id      uuid.UUID `db:"id" goqu:"skipupdate"`
+		Value   float64   `db:"value"`
+		Date    string    `db:"date"`
+		PayDate *string   `db:"pay_date"`
+		Account Account   `db:"account"`
+		TransId uuid.UUID `db:"trans_id"`
+	}
+
+	found, err := query.ScanStruct(&entry)
+	if err != nil {
 		return nil, err
 	}
 
-	date := time.UnixMilli(entry.Date * 1000)
-	payDate := time.UnixMilli(*entry.PayDate * 1000)
+	if !found {
+		return nil, errors.New("entry not found")
+	}
+
+	date, err := time.Parse(time.RFC3339, entry.Date)
+	if err != nil {
+		return nil, err
+	}
+
+	payDate, err := time.Parse(time.RFC3339, *entry.PayDate)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Entry{
 		Id:      entry.Id,
 		Value:   entry.Value,
-		Account: entry.Account,
-		TransId: entry.TransId,
 		Date:    date,
 		PayDate: &payDate,
+		Account: entry.Account,
+		TransId: entry.TransId,
 	}, nil
 }
