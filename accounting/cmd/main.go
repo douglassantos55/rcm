@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"sync"
 
 	"reconcip.com.br/accounting/pkg"
 )
@@ -20,14 +21,53 @@ func main() {
 		log.Fatal(err)
 	}
 
-	svc := pkg.NewService(repository)
-
-	if err := pkg.OrderCreatedSubscriber(
-		svc,
+	conn, err := pkg.Connect(
 		os.Getenv("MESSENGER_HOST"),
 		os.Getenv("MESSENGER_USERNAME"),
 		os.Getenv("MESSENGER_PASSWORD"),
-	); err != nil {
-		log.Print(err)
+	)
+
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	defer conn.Close()
+
+	var wg sync.WaitGroup
+	svc := pkg.NewService(repository)
+
+	wg.Add(2)
+
+	go func(svc pkg.Service) {
+		defer wg.Done()
+
+		channel, err := conn.Channel()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer channel.Close()
+
+		if err := pkg.RentCreatedSubscriber(svc, channel); err != nil {
+			log.Fatal(err)
+		}
+	}(svc)
+
+	go func(svc pkg.Service) {
+		defer wg.Done()
+
+		channel, err := conn.Channel()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer channel.Close()
+
+		if err := pkg.RentUpdatedSubscriber(svc, channel); err != nil {
+			log.Fatal(err)
+		}
+	}(svc)
+
+
+	wg.Wait()
 }
