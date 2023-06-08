@@ -1,0 +1,8 @@
+CREATE TABLE entries (
+    id VARCHAR(255) PRIMARY KEY,
+    value DECIMAL(10, 2) NOT NULL,
+    account INTEGER NOT NULL,
+    trans_id VARCHAR(255) NOT NULL,
+    date DATETIME NOT NULL,
+    pay_date DATETIME DEFAULT NULL
+);

@@ -74,6 +74,7 @@ services:
       - infra
     ports:
       - '5672:5672'
+      - '15672:15672'
     volumes:
       - 'rabbitmq:/var/lib/rabbitmq'
 
