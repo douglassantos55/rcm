@@ -89,6 +89,8 @@ class RentController extends Controller
     public function destroy(string $rent)
     {
         $this->repository->delete($rent);
+        $this->messenger->send($rent, 'rent.deleted');
+
         return response()->noContent();
     }
 }
