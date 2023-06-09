@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Messenger\Messenger;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Rent;
@@ -23,6 +24,10 @@ class RentTest extends TestCase
             $mock->shouldReceive('get')->with('inventory')->andReturn(['inventory']);
             $mock->shouldReceive('get')->with('payment')->andReturn(['payment']);
             $mock->shouldReceive('get')->with('pricing')->andReturn(['pricing']);
+        });
+
+        $this->partialMock(Messenger::class, function (MockInterface $mock) {
+            $mock->shouldReceive('send')->andReturn();
         });
     }
 
@@ -151,8 +156,15 @@ class RentTest extends TestCase
     public function test_create()
     {
         Http::fake([
-            'payment/*' => Http::response(['foo' => 'bar']),
-            'inventory/*' => Http::response(['rent_value' => '0.35', 'unit_value' => 1000]),
+            'payment/*' => Http::response(['increment' => 0]),
+            'inventory/*' => Http::response([
+                'values' => [
+                    'bf18eb16-0b38-404a-8916-429638f1d793' => [
+                        'value' => 0.35
+                    ]
+                ],
+                'unit_value' => 1000
+            ]),
             'pricing/*' => Http::response(['foo' => 'bar']),
         ]);
 
@@ -440,18 +452,34 @@ class RentTest extends TestCase
 
     public function test_update()
     {
+        $rent = Rent::factory()->create();
+
         Http::fake([
-            'payment/*' => Http::response(['foo' => 'baz']),
+            'payment/*' => Http::response(['increment' => 0]),
             'pricing/*' => Http::response(['foo' => 'baz']),
             'inventory/equipment/3272' => Http::response([
-                'rent_value' => '0.3', 'unit_value' => '250'
+                'values' => [
+                    $rent->period_id => [
+                        'value' => 0.3
+                    ],
+                    'bf18eb16-0b38-404a-8916-429638f1d793' => [
+                        'value' => 0.3
+                    ]
+                ],
+                'unit_value' => 250
             ]),
             'inventory/equipment/3030' => Http::response([
-                'rent_value' => '0.75', 'unit_value' => '150'
+                'values' => [
+                    $rent->period_id => [
+                        'value' => 0.3
+                    ],
+                    'bf18eb16-0b38-404a-8916-429638f1d793' => [
+                        'value' => 0.75
+                    ]
+                ],
+                'unit_value' => 150
             ]),
         ]);
-
-        $rent = Rent::factory()->create();
 
         $rent->items()->createMany([
             ['equipment_id' => '3272', 'qty' => 10],
@@ -651,7 +679,7 @@ class RentTest extends TestCase
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(100, 'data');
+        $response->assertJsonCount(100, 'items');
     }
 
     public function test_list_paginates_per_page_over_limit()
@@ -676,7 +704,7 @@ class RentTest extends TestCase
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(20, 'data');
+        $response->assertJsonCount(20, 'items');
     }
 
     public function test_list_filter_by_number()

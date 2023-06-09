@@ -18,16 +18,26 @@ class ItemTest extends TestCase
         parent::setUp();
 
         $this->partialMock(Registry::class, function (MockInterface $mock) {
-            $mock->shouldReceive('get')->andReturn(['inventory']);
+            $mock->shouldReceive('get')->with('inventory')->andReturn(['inventory']);
+            $mock->shouldReceive('get')->with('payment')->andReturn(['payment']);
         });
     }
 
     public function test_appends_equipment()
     {
-        $equipment = ['unit_value' => '15.55', 'rent_value' => 0.3];
-        Http::fake(['*' => Http::response($equipment)]);
+        $equipment = [
+            'unit_value' => 1000,
+            'values' => [
+                'foobar' => ['value' => 0.3],
+            ],
+        ];
 
-        $item = Item::factory()->create();
+        Http::fake([
+            'inventory/*' => Http::response($equipment),
+            'payment/*' => Http::response(['increment' => 15]),
+        ]);
+
+        $item = Item::factory()->forRent(['period_id' => 'foobar'])->create();
         $this->assertEquals($equipment, $item->equipment);
     }
 

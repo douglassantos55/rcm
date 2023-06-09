@@ -14,7 +14,6 @@ return new class extends Migration
     {
         Schema::create('rents', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->unsignedInteger('number')->unique();
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->uuid('payment_type_id');
@@ -37,7 +36,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement('ALTER TABLE rents CHANGE number number INT UNSIGNED AUTO_INCREMENT');
+        DB::statement('ALTER TABLE rents ADD COLUMN number INT UNSIGNED AUTO_INCREMENT');
     }
 
     /**
