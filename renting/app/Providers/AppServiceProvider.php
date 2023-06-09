@@ -57,11 +57,12 @@ class AppServiceProvider extends ServiceProvider
             $registry = $app->make(Registry::class);
             $breaker = $app->make(CircuitBreaker::class);
             $balancer = $app->make(Balancer::class);
+            $cache = $app->make(CacheRepository::class);
 
             $service = env('PAYMENT_SERVICE');
             $instance = $balancer->get($registry->get($service));
 
-            return new RestPaymentService($instance, $breaker);
+            return new RestPaymentService($instance, $breaker, $cache);
         });
 
         $this->app->singleton(InventoryService::class, function (Application $app) {

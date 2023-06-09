@@ -6,6 +6,7 @@ use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\PaymentService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Contracts\Cache\Repository;
 
 class RestPaymentService implements PaymentService
 {
@@ -22,8 +23,14 @@ class RestPaymentService implements PaymentService
      */
     private $breaker;
 
-    public function __construct(string $serviceUrl, CircuitBreaker $breaker)
+    /**
+     * @var Repository
+     */
+    private $cache;
+
+    public function __construct(string $serviceUrl, CircuitBreaker $breaker, Repository $cache)
     {
+        $this->cache = $cache;
         $this->breaker = $breaker;
 
         $this->client = Http::baseUrl($serviceUrl)
@@ -61,6 +68,10 @@ class RestPaymentService implements PaymentService
 
     private function request(string $url): ?array
     {
+        if ($this->cache->has($url)) {
+            return $this->cache->get($url);
+        }
+
         return $this->breaker->invoke(function () use ($url) {
             $response = $this->client
                 ->withToken(request()->bearerToken())
@@ -71,7 +82,11 @@ class RestPaymentService implements PaymentService
                 return null;
             }
 
-            return $response->json();
+            $result = $response->json();
+
+            $this->cache->put($url, $result, now()->addSeconds(5));
+
+            return $result;
         }, self::NAME, self::MAX_ATTEMPTS);
     }
 }

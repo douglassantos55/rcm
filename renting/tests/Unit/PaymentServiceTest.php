@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Services\CircuitBreaker\RateLimitBreaker;
 use App\Services\Rest\RestPaymentService;
 use Illuminate\Cache\RateLimiter;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Client\Request;
 use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Http;
@@ -22,18 +23,24 @@ class PaymentServiceTest extends TestCase
      */
     private $limiter;
 
+    /**
+     * @var Repository
+     */
+    private $cache;
+
     public function setUp(): void
     {
         parent::setUp();
 
         $this->limiter = app(RateLimiter::class);
+        $this->cache = app(Repository::class);
         $this->breaker = new RateLimitBreaker($this->limiter, app(Logger::class));
     }
 
     public function test_has()
     {
         Http::fake(['*' => Http::response(['foo' => 'bar'])]);
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
 
         $uuid = '2569e8d3-0ccf-4915-9fba-21cb2dddc7b5';
         $this->assertTrue($service->has('payment_type_id', $uuid));
@@ -44,7 +51,7 @@ class PaymentServiceTest extends TestCase
     public function test_does_not_have()
     {
         Http::fake(['*' => Http::response('not found', 404)]);
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
 
         $uuid = '2569e8d3-0ccf-4915-9fba-21cb2dddc7b5';
         $this->assertFalse($service->has('payment_type_id', $uuid));
@@ -55,7 +62,7 @@ class PaymentServiceTest extends TestCase
     public function test_has_server_error()
     {
         Http::fake(['*' => Http::response(['foo' => 'bar'], 500)]);
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
 
         $uuid = '2569e8d3-0ccf-4915-9fba-21cb2dddc7b5';
         $this->assertFalse($service->has('payment_type_id', $uuid));
@@ -66,7 +73,7 @@ class PaymentServiceTest extends TestCase
     public function test_rate_limit_server_error_counts()
     {
         Http::fake(['*' => Http::response(['foo' => 'bar'], 500)]);
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
 
         for ($i = 0; $i < 5; $i++) {
             $this->assertNull($service->getPaymentCondition('aoeuaoeu'));
@@ -79,7 +86,7 @@ class PaymentServiceTest extends TestCase
     public function test_rate_limit_client_error_does_not_count()
     {
         Http::fake(['*' => Http::response('not found', 404)]);
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
 
         for ($i = 0; $i < 5; $i++) {
             $this->assertNull($service->getPaymentCondition('aoeuaoeu'));
@@ -98,7 +105,7 @@ class PaymentServiceTest extends TestCase
             'payment/payment-types/' . $uuid => Http::response(['id' => '123']),
         ]);
 
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
         for ($i = 0; $i < 4; $i++) {
             $this->assertNull($service->getPaymentType('aoeu'));
         }
@@ -111,7 +118,7 @@ class PaymentServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response()]);
 
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
         $service->getPaymentType('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
 
         Http::assertSent(function (Request $request) {
@@ -123,7 +130,7 @@ class PaymentServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response()]);
 
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
         $service->getPaymentMethod('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
 
         Http::assertSent(function (Request $request) {
@@ -135,7 +142,7 @@ class PaymentServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response()]);
 
-        $service = new RestPaymentService('payment', $this->breaker);
+        $service = new RestPaymentService('payment', $this->breaker, $this->cache);
         $service->getPaymentCondition('ce283991-b0fb-4ea9-8286-f79157dfd3c1');
 
         Http::assertSent(function (Request $request) {
