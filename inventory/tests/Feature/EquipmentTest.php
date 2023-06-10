@@ -111,6 +111,10 @@ class EquipmentTest extends TestCase
 
     public function test_show()
     {
+        Http::fake([
+            'pricing/renting-values*' => Http::response([]),
+        ]);
+
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
         $response = $this->get(route('equipment.show', $equipment->id), [
@@ -235,6 +239,10 @@ class EquipmentTest extends TestCase
 
     public function test_list()
     {
+        Http::fake([
+            'pricing/renting-values*' => Http::response([]),
+        ]);
+
         Equipment::factory()->count(10)->create();
         Equipment::factory()->count(10)->create(['deleted_at' => now()]);
 
@@ -247,7 +255,17 @@ class EquipmentTest extends TestCase
 
     public function test_create_renting_values()
     {
-        Http::fake(['pricing/renting-values' => Http::response()]);
+        Http::fake(['pricing/renting-values*' => Http::response([
+            '2637fae5-963b-4f5c-8352-c37fbb915d49' => [
+                'value' => 1050,
+            ],
+            '3f63408c-3732-417e-8275-d759e584b84b' => [
+                'value' => 1150,
+            ],
+            '8548880f-a0e3-4d01-b5cd-b8302bdfdf0e' => [
+                'value' => 1250,
+            ],
+        ])]);
 
         $response = $this->post(route('equipment.store'), [
             'description' => 'With renting values',
@@ -277,6 +295,10 @@ class EquipmentTest extends TestCase
 
         Http::assertSent(function (Request $request, Response $response) use ($equipment) {
             $data = $request->data();
+
+            if ($request->method() === 'GET') {
+                return true;
+            }
 
             if (count($data['values']) !== 3) {
                 return false;
@@ -568,7 +590,7 @@ class EquipmentTest extends TestCase
 
     public function test_create_values_multiple_times()
     {
-        Http::fake(['pricing/renting-values' => Http::response()]);
+        Http::fake(['pricing/renting-values*' => Http::response([])]);
 
         $doRequest = function () {
             return $this->post(route('equipment.store'), [
@@ -599,13 +621,13 @@ class EquipmentTest extends TestCase
 
         $response = $doRequest();
 
-        Http::assertSentCount(6);
+        Http::assertSentCount(12);
         $response->assertSuccessful();
     }
 
     public function test_create_values_max_attempts()
     {
-        Http::fake(['pricing/renting-values' => Http::response(null, 500)]);
+        Http::fake(['pricing/renting-values*' => Http::response(null, 500)]);
 
         $doRequest = function () {
             return $this->post(route('equipment.store'), [
@@ -647,7 +669,7 @@ class EquipmentTest extends TestCase
             RateLimiter::hit('pricing');
         }
 
-        Http::fake(['pricing/renting-values' => Http::response()]);
+        Http::fake(['pricing/renting-values*' => Http::response()]);
 
         $response = $this->post(route('equipment.store'), [
             'description' => 'Max attempts',
@@ -670,7 +692,7 @@ class EquipmentTest extends TestCase
             ],
         ], ['accept' => 'application/json']);
 
-        Http::assertSentCount(1);
+        Http::assertSentCount(2);
         $response->assertSuccessful();
         $this->assertEquals(5, RateLimiter::remaining('pricing', 5));
     }
@@ -709,7 +731,7 @@ class EquipmentTest extends TestCase
 
     public function test_update_values_multiple_times()
     {
-        Http::fake(['pricing/renting-values' => Http::response()]);
+        Http::fake(['pricing/renting-values*' => Http::response()]);
 
         $doRequest = function (Equipment $equipment) {
             return $this->put(route('equipment.update', $equipment->id), [
@@ -738,7 +760,7 @@ class EquipmentTest extends TestCase
 
         $response = $doRequest($equipment);
 
-        Http::assertSentCount(6);
+        Http::assertSentCount(12);
         $response->assertSuccessful();
     }
 
@@ -786,7 +808,7 @@ class EquipmentTest extends TestCase
             RateLimiter::hit('pricing');
         }
 
-        Http::fake(['pricing/renting-values' => Http::response()]);
+        Http::fake(['pricing/renting-values*' => Http::response()]);
         $equipment = Equipment::factory()->create(['description' => 'Test']);
 
         $response = $this->put(route('equipment.update', $equipment->id), [
@@ -806,7 +828,7 @@ class EquipmentTest extends TestCase
             ],
         ], ['accept' => 'application/json']);
 
-        Http::assertSentCount(1);
+        Http::assertSentCount(2);
         $response->assertSuccessful();
         $this->assertEquals(5, RateLimiter::remaining('pricing', 5));
     }
