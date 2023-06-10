@@ -512,19 +512,20 @@ class RentTest extends TestCase
             ],
         ], ['accept' => 'application/json']);
 
-        $rent->refresh();
         $response->assertSuccessful();
 
-        $this->assertCount(1, Item::all());
-        $this->assertCount(1, $rent->items);
-        $this->assertEquals(2, $rent->items[0]->qty);
-        $this->assertEquals(0.6, $rent->items[0]->rent_value);
-        $this->assertEquals(500, $rent->items[0]->unit_value);
+        $rent = $response->json();
 
-        $this->assertEquals(10, $rent->qty_days);
-        $this->assertEquals('bf18eb16-0b38-404a-8916-429638f1d793', $rent->period_id);
-        $this->assertEquals($customer->id, $rent->customer_id);
-        $this->assertEquals('Testing update', $rent->observations);
+        $this->assertCount(1, Item::all());
+        $this->assertCount(1, $rent['items']);
+        $this->assertEquals(2, $rent['items'][0]['qty']);
+        $this->assertEquals(0.6, $rent['items'][0]['rent_value']);
+        $this->assertEquals(500, $rent['items'][0]['unit_value']);
+
+        $this->assertEquals(10, $rent['qty_days']);
+        $this->assertEquals('bf18eb16-0b38-404a-8916-429638f1d793', $rent['period_id']);
+        $this->assertEquals($customer->id, $rent['customer_id']);
+        $this->assertEquals('Testing update', $rent['observations']);
     }
 
     /**

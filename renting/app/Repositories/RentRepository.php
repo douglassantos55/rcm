@@ -7,10 +7,10 @@ interface RentRepository extends Repository
     /**
      * Saves rent items
      *
-     * @param string $rentId
+     * @param mixed $rent
      * @param array $items
      *
      * @return mixed The created items
      */
-    public function createItems(string $rentId, array $items): mixed;
+    public function createItems(mixed $rent, array $items): mixed;
 };

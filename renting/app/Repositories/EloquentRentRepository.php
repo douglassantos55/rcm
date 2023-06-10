@@ -22,7 +22,7 @@ class EloquentRentRepository extends EloquentRepository implements RentRepositor
             $items = $data['items'];
 
             $rent = $this->getModel()->create($data);
-            $this->createItems($rent->id, $items);
+            $this->createItems($rent, $items);
 
             return $rent;
         });
@@ -32,20 +32,19 @@ class EloquentRentRepository extends EloquentRepository implements RentRepositor
     public function update(string $id, array $data): mixed
     {
         return DB::transaction(function () use ($id, $data) {
+            /** @var Rent */
             $rent = $this->find($id);
             $rent->update($data);
 
-            $items = $data['items'];
             $rent->items()->delete();
-            $this->createItems($id, $items);
+            $this->createItems($rent, $data['items']);
 
-            return $rent;
+            return $rent->fresh();
         });
     }
 
-    public function createItems(string $rentId, array $items): mixed
+    public function createItems(mixed $rent, array $items): mixed
     {
-        $rent = $this->find($rentId);
         return $rent->items()->createMany($items);
     }
 }
