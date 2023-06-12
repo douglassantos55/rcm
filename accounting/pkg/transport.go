@@ -53,6 +53,9 @@ func RentCreatedSubscriber(svc Service, channel *amqp.Channel) error {
 	for message := range messages {
 		log.Printf("[*] Message 'rent.created': %s", message.Body)
 		handler(&message)
+		if err := message.Ack(false); err != nil {
+			log.Printf("ack failed: %v", err)
+		}
 	}
 
 	return nil
@@ -84,6 +87,9 @@ func RentUpdatedSubscriber(svc Service, channel *amqp.Channel) error {
 	for message := range messages {
 		log.Printf("[*] Message 'rent.updated': %s", message.Body)
 		handler(&message)
+		if err := message.Ack(false); err != nil {
+			log.Printf("ack failed: %v", err)
+		}
 	}
 
 	return nil
@@ -115,6 +121,9 @@ func RentDeletedSubscriber(svc Service, channel *amqp.Channel) error {
 	for message := range messages {
 		log.Printf("[*] Message 'rent.deleted': %s", message.Body)
 		handler(&message)
+		if err := message.Ack(false); err != nil {
+			log.Printf("ack failed: %v", err)
+		}
 	}
 
 	return nil
