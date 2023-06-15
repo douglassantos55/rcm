@@ -11,7 +11,15 @@ import (
 )
 
 func setupQueue(channel *amqp.Channel, exchange, key, name string) (*amqp.Queue, error) {
-	if err := channel.ExchangeDeclare(exchange, amqp.ExchangeTopic, true, false, false, false, nil); err != nil {
+	if err := channel.ExchangeDeclare(
+		exchange,
+		amqp.ExchangeTopic,
+		true,  // durable
+		false, // auto delete
+		false, // internal
+		false, // no wait
+		nil,
+	); err != nil {
 		return nil, err
 	}
 
@@ -42,7 +50,7 @@ func RentCreatedSubscriber(svc Service, channel *amqp.Channel) error {
 		rentCreatedEndpoint(svc),
 		decodeTransaction,
 		kit_amqp.EncodeJSONResponse,
-		kit_amqp.SubscriberResponsePublisher(kit_amqp.NopResponsePublisher),
+		kit_amqp.SubscriberResponsePublisher(NopAndAckResponsePublisher),
 		kit_amqp.SubscriberErrorEncoder(kit_amqp.SingleNackRequeueErrorEncoder),
 	)
 
@@ -53,9 +61,6 @@ func RentCreatedSubscriber(svc Service, channel *amqp.Channel) error {
 	for message := range messages {
 		log.Printf("[*] Message 'rent.created': %s", message.Body)
 		handler(&message)
-		if err := message.Ack(false); err != nil {
-			log.Printf("ack failed: %v", err)
-		}
 	}
 
 	return nil
@@ -76,7 +81,7 @@ func RentUpdatedSubscriber(svc Service, channel *amqp.Channel) error {
 		rentUpdatedEndpoint(svc),
 		decodeTransaction,
 		kit_amqp.EncodeJSONResponse,
-		kit_amqp.SubscriberResponsePublisher(kit_amqp.NopResponsePublisher),
+		kit_amqp.SubscriberResponsePublisher(NopAndAckResponsePublisher),
 		kit_amqp.SubscriberErrorEncoder(kit_amqp.SingleNackRequeueErrorEncoder),
 	)
 
@@ -87,9 +92,6 @@ func RentUpdatedSubscriber(svc Service, channel *amqp.Channel) error {
 	for message := range messages {
 		log.Printf("[*] Message 'rent.updated': %s", message.Body)
 		handler(&message)
-		if err := message.Ack(false); err != nil {
-			log.Printf("ack failed: %v", err)
-		}
 	}
 
 	return nil
@@ -110,7 +112,7 @@ func RentDeletedSubscriber(svc Service, channel *amqp.Channel) error {
 		rentDeletedEndpoint(svc),
 		decodeUUID,
 		kit_amqp.EncodeJSONResponse,
-		kit_amqp.SubscriberResponsePublisher(kit_amqp.NopResponsePublisher),
+		kit_amqp.SubscriberResponsePublisher(NopAndAckResponsePublisher),
 		kit_amqp.SubscriberErrorEncoder(kit_amqp.SingleNackRequeueErrorEncoder),
 	)
 
@@ -121,9 +123,6 @@ func RentDeletedSubscriber(svc Service, channel *amqp.Channel) error {
 	for message := range messages {
 		log.Printf("[*] Message 'rent.deleted': %s", message.Body)
 		handler(&message)
-		if err := message.Ack(false); err != nil {
-			log.Printf("ack failed: %v", err)
-		}
 	}
 
 	return nil
@@ -143,4 +142,14 @@ func decodeUUID(ctx context.Context, message *amqp.Delivery) (any, error) {
 		return nil, err
 	}
 	return uuid, nil
+}
+
+// Simply acknowledges the delivery without sending a reply
+func NopAndAckResponsePublisher(
+	ctx context.Context,
+	message *amqp.Delivery,
+	ch kit_amqp.Channel,
+	pub *amqp.Publishing,
+) error {
+	return message.Ack(false)
 }

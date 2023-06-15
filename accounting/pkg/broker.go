@@ -6,15 +6,10 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var connection *amqp.Connection
-
 func Connect(host, user, password string) (*amqp.Connection, error) {
-	if connection == nil {
-		conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s", user, password, host))
-		if err != nil {
-			return nil, err
-		}
-		connection = conn
+	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s", user, password, host))
+	if err != nil {
+		return nil, err
 	}
-	return connection, nil
+	return conn, nil
 }

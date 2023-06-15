@@ -38,7 +38,7 @@ func main() {
 
 	wg.Add(3)
 
-	go func(svc pkg.Service) {
+	go func() {
 		defer wg.Done()
 
 		channel, err := conn.Channel()
@@ -51,9 +51,9 @@ func main() {
 		if err := pkg.RentCreatedSubscriber(svc, channel); err != nil {
 			log.Fatal(err)
 		}
-	}(svc)
+	}()
 
-	go func(svc pkg.Service) {
+	go func() {
 		defer wg.Done()
 
 		channel, err := conn.Channel()
@@ -66,9 +66,9 @@ func main() {
 		if err := pkg.RentUpdatedSubscriber(svc, channel); err != nil {
 			log.Fatal(err)
 		}
-	}(svc)
+	}()
 
-	go func(svc pkg.Service) {
+	go func() {
 		defer wg.Done()
 
 		channel, err := conn.Channel()
@@ -81,7 +81,7 @@ func main() {
 		if err := pkg.RentDeletedSubscriber(svc, channel); err != nil {
 			log.Fatal(err)
 		}
-	}(svc)
+	}()
 
 	wg.Wait()
 }
