@@ -4,21 +4,37 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
+use App\Repositories\EquipmentRepository;
 use App\Services\PricingService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class EquipmentController extends Controller
 {
     private $service;
 
-    public function __construct(PricingService $service)
+    /**
+     * @var EquipmentRepository
+     */
+    private $repository;
+
+    public function __construct(PricingService $service, EquipmentRepository $repository)
     {
         $this->service = $service;
+        $this->repository = $repository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return Equipment::with('supplier')->get();
+        if ($request->query('description')) {
+            $this->repository->contains('description', $request->query('description'));
+        }
+
+        if ($request->query('supplier')) {
+            $this->repository->where('supplier_id', $request->query('supplier'));
+        }
+
+        return $this->repository->with('supplier')->get();
     }
 
     public function show(Equipment $equipment)

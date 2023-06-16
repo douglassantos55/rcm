@@ -253,6 +253,55 @@ class EquipmentTest extends TestCase
         $response->assertJsonCount(10);
     }
 
+    public function test_filter_by_description()
+    {
+        Http::fake([
+            'pricing/renting-values*' => Http::response([]),
+        ]);
+
+        Equipment::factory()->count(100)->create();
+        Equipment::factory()->create(['description' => 'escoramento']);
+
+        $response = $this->get(route('equipment.index', ['description' => 'escora']), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(1);
+    }
+
+    public function test_filter_by_non_existing_description()
+    {
+        Equipment::factory()->count(50)->create();
+
+        $response = $this->get(route('equipment.index', ['description' => 'xyz']), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(0);
+    }
+
+    public function test_filter_by_supplier()
+    {
+        $equipment = Equipment::factory()->count(50)->create();
+
+        $response = $this->get(route('equipment.index', [
+            'supplier' => $equipment[0]->supplier_id
+        ]), ['accept' => 'application/json']);
+
+        $response->assertJsonCount(1);
+    }
+
+    public function test_filter_by_non_existing_supplier()
+    {
+        Equipment::factory()->count(50)->create();
+
+        $response = $this->get(route('equipment.index', ['supplier' => 'xyz']), [
+            'accept' => 'application/json'
+        ]);
+
+        $response->assertJsonCount(0);
+    }
+
     public function test_create_renting_values()
     {
         Http::fake(['pricing/renting-values*' => Http::response([

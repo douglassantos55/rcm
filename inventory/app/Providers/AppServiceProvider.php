@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Repositories\EloquentEquipmentRepository;
 use App\Repositories\EloquentSupplierRepository;
+use App\Repositories\EquipmentRepository;
 use App\Repositories\SupplierRepository;
 use App\Services\Balancer\Balancer;
 use App\Services\Balancer\RoundRobinBalancer;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public $bindings = [
         SupplierRepository::class => EloquentSupplierRepository::class,
+        EquipmentRepository::class => EloquentEquipmentRepository::class,
     ];
 
     /**
