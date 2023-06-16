@@ -6,7 +6,6 @@ use App\Exceptions\DatabaseException;
 use App\Exceptions\EntityNotFoundException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 abstract class EloquentRepository implements Repository
 {
