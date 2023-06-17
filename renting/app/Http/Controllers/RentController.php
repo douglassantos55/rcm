@@ -14,6 +14,9 @@ class RentController extends Controller
      */
     private $repository;
 
+    /**
+     * @var Messenger
+     */
     private $messenger;
 
     public function __construct(RentRepository $repository, Messenger $messenger)
@@ -28,11 +31,15 @@ class RentController extends Controller
     public function index(Request $request)
     {
         if ($request->query('number')) {
-            $this->repository->where('id', $request->query('number'));
+            $this->repository->where('number', $request->query('number'));
         }
 
         if ($request->query('customer')) {
             $this->repository->where('customer_id', $request->query('customer'));
+        }
+
+        if ($request->query('start_date')) {
+            $this->repository->contains('start_date', $request->query('start_date'));
         }
 
         return $this->repository
