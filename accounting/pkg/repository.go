@@ -101,13 +101,9 @@ func (r *SqlRepository) Update(entry *Entry) (*Entry, error) {
 		return nil, err
 	}
 
-	updated, err := result.RowsAffected()
+	_, err = result.RowsAffected()
 	if err != nil {
 		return nil, err
-	}
-
-	if updated == 0 {
-		return nil, errors.New("could not update entry")
 	}
 
 	return entry, nil

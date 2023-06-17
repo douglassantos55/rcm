@@ -99,7 +99,7 @@ func TestRepository(t *testing.T) {
 			TransId: uuid.New(),
 		})
 
-		if err == nil {
+		if err != nil {
 			t.Error("should not update non existing entry")
 		}
 	})
