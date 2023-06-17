@@ -28,7 +28,7 @@ class SupplierController extends Controller
             ->contains('social_name', $request->query('social_name'))
             ->contains('email', $request->query('email'))
             ->contains('cnpj', $request->query('cnpj'))
-            ->get();
+            ->paginate($request->query('page', 1), $request->query('per_page', 50));
     }
 
     /**

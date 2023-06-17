@@ -222,7 +222,8 @@ class SuppliersTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJsonCount(300);
+        $response->assertJsonCount(50, 'items');
+        $this->assertEquals(300, $response['total']);
     }
 
     public function test_filter_by_social_name()
@@ -237,7 +238,8 @@ class SuppliersTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJsonCount(3);
+        $response->assertJsonCount(3, 'items');
+        $this->assertEquals(3, $response['total']);
     }
 
     public function test_filter_by_cnpj()
@@ -252,7 +254,8 @@ class SuppliersTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJsonCount(2);
+        $response->assertJsonCount(2, 'items');
+        $this->assertEquals(2, $response['total']);
     }
 
     public function test_filter_by_email()
@@ -267,10 +270,11 @@ class SuppliersTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJsonCount(2);
+        $response->assertJsonCount(2, 'items');
+        $this->assertEquals(2, $response['total']);
     }
 
-    public function test_filter_by_legal_name()
+    public function test_filter_by_legal_name_ignored()
     {
         Supplier::factory()->count(100)->create();
         Supplier::factory()->create(['legal_name' => 'John Doe Inc']);
@@ -282,6 +286,7 @@ class SuppliersTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJsonCount(103);
+        $response->assertJsonCount(50, 'items');
+        $this->assertEquals(103, $response['total']);
     }
 }
