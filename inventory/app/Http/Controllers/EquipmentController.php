@@ -34,7 +34,9 @@ class EquipmentController extends Controller
             $this->repository->where('supplier_id', $request->query('supplier'));
         }
 
-        return $this->repository->with('supplier')->get();
+        return $this->repository
+            ->with('supplier')
+            ->paginate($request->query('page', 1), $request->query('per_page', 50));
     }
 
     public function show(Equipment $equipment)

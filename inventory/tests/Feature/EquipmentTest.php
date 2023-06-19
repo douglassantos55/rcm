@@ -243,14 +243,15 @@ class EquipmentTest extends TestCase
             'pricing/renting-values*' => Http::response([]),
         ]);
 
-        Equipment::factory()->count(10)->create();
+        Equipment::factory()->count(100)->create();
         Equipment::factory()->count(10)->create(['deleted_at' => now()]);
 
         $response = $this->get(route('equipment.index'), [
             'accept' => 'application/json',
         ]);
 
-        $response->assertJsonCount(10);
+        $response->assertJsonCount(50, 'items');
+        $this->assertEquals(100, $response['total']);
     }
 
     public function test_filter_by_description()
@@ -266,40 +267,57 @@ class EquipmentTest extends TestCase
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(1);
+        $response->assertJsonCount(1, 'items');
+        $this->assertEquals(1, $response['total']);
     }
 
     public function test_filter_by_non_existing_description()
     {
+        Http::fake([
+            'pricing/renting-values*' => Http::response([]),
+        ]);
+
         Equipment::factory()->count(50)->create();
 
         $response = $this->get(route('equipment.index', ['description' => 'xyz']), [
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(0);
+        $response->assertJsonCount(0, 'items');
+        $this->assertEquals(0, $response['total']);
     }
 
     public function test_filter_by_supplier()
     {
-        $equipment = Equipment::factory()->count(50)->create();
+        Http::fake([
+            'pricing/renting-values*' => Http::response([]),
+        ]);
+
+        Equipment::factory()->count(50)->create();
+        $equipment = Equipment::factory()->forSupplier()->create();
 
         $response = $this->get(route('equipment.index', [
-            'supplier' => $equipment[0]->supplier_id
+            'supplier' => $equipment->supplier_id
         ]), ['accept' => 'application/json']);
 
-        $response->assertJsonCount(1);
+        $response->assertJsonCount(1, 'items');
+        $this->assertEquals(1, $response['total']);
     }
 
     public function test_filter_by_non_existing_supplier()
     {
+        Http::fake([
+            'pricing/renting-values*' => Http::response([]),
+        ]);
+
         Equipment::factory()->count(50)->create();
 
         $response = $this->get(route('equipment.index', ['supplier' => 'xyz']), [
             'accept' => 'application/json'
         ]);
 
-        $response->assertJsonCount(0);
+        $response->assertJsonCount(0, 'items');
+        $this->assertEquals(0, $response['total']);
     }
 
     public function test_create_renting_values()
