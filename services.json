@@ -9,7 +9,7 @@
             "check": {
                 "name": "inventory-healthcheck",
                 "http": "http://inventory/health-check",
-                "interval": "5m",
+                "interval": "2s",
                 "timeout": "1s",
                 "status": "passing"
             }
@@ -37,7 +37,7 @@
             "check": {
                 "name": "payment-healthcheck",
                 "http": "http://payment/actuator/health",
-                "interval": "5m",
+                "interval": "2s",
                 "timeout": "2s",
                 "status": "passing"
             }
@@ -51,7 +51,7 @@
             "check": {
                 "name": "pricing-healthcheck",
                 "http": "http://pricing/health-check",
-                "interval": "5m",
+                "interval": "2s",
                 "timeout": "1s",
                 "status": "passing"
             }
